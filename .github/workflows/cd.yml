@@ -8,9 +8,6 @@ on:
   push:
     branches: [main, master]
 
-env:
-  IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
-
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -19,6 +16,12 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set image prefix (lowercase for Docker)
+        run: |
+          OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          REPO_LOWER=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
+          echo "IMAGE_PREFIX=ghcr.io/${OWNER_LOWER}/${REPO_LOWER}" >> $GITHUB_ENV
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -79,6 +82,12 @@ jobs:
       packages: read
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set image prefix (lowercase for Docker)
+        run: |
+          OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          REPO_LOWER=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
+          echo "IMAGE_PREFIX=ghcr.io/${OWNER_LOWER}/${REPO_LOWER}" >> $GITHUB_ENV
 
       - name: Replace image names in manifests
         run: |
