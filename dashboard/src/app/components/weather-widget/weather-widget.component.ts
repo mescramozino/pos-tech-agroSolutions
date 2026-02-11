@@ -1,12 +1,12 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DatePipe } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { WeatherService, WeatherForecast } from '../../services/weather.service';
 
 @Component({
   selector: 'app-weather-widget',
   standalone: true,
-  imports: [FormsModule, DatePipe],
+  imports: [FormsModule, DatePipe, DecimalPipe],
   template: `
     <div class="weather-widget card">
       <div class="weather-header">

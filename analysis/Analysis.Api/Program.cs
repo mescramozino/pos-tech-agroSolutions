@@ -8,12 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AnalysisDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection") ?? "Host=localhost;Port=5432;Database=analysis_db;Username=agro;Password=secret"));
 
-var influxUrl = builder.Configuration["InfluxDB:Url"];
-var influxToken = builder.Configuration["InfluxDB:Token"];
-if (!string.IsNullOrWhiteSpace(influxUrl) && !string.IsNullOrWhiteSpace(influxToken))
-    builder.Services.AddSingleton<ISensorReadingsTimeSeriesStore, InfluxDbSensorReadingsStore>();
-else
-    builder.Services.AddSingleton<ISensorReadingsTimeSeriesStore, NullSensorReadingsTimeSeriesStore>();
+builder.Services.AddScoped<ISensorReadingsTimeSeriesStore, PostgresSensorReadingsStore>();
 
 builder.Services.AddHttpClient();
 builder.Services.AddHostedService<SensorReadingsConsumer>();
@@ -27,11 +22,7 @@ builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AnalysisDbContext>();
-    db.Database.EnsureCreated();
-}
+await EnsureDatabaseAsync(app);
 
 app.UseSwagger();
 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Analysis API v1"));
@@ -42,4 +33,26 @@ app.MapMetrics();
 
 app.Run();
 
-public partial class Program { }
+public partial class Program
+{
+    static async Task EnsureDatabaseAsync(WebApplication app)
+    {
+        const int maxAttempts = 15;
+        const int delayMs = 2000;
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AnalysisDbContext>();
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            try
+            {
+                await db.Database.EnsureCreatedAsync();
+                return;
+            }
+            catch (Exception)
+            {
+                if (attempt == maxAttempts) throw;
+                await Task.Delay(delayMs);
+            }
+        }
+    }
+}

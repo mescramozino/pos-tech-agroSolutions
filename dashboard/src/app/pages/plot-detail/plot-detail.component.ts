@@ -1,6 +1,6 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { BaseChartDirective } from 'ng2-charts';
+import { NgChartsModule } from 'ng2-charts';
 import { ChartConfiguration } from 'chart.js';
 import { PropertiesService, Plot } from '../../services/properties.service';
 import { AnalysisService, Reading, PlotStatus } from '../../services/analysis.service';
@@ -8,7 +8,7 @@ import { AnalysisService, Reading, PlotStatus } from '../../services/analysis.se
 @Component({
   selector: 'app-plot-detail',
   standalone: true,
-  imports: [RouterLink, BaseChartDirective],
+  imports: [RouterLink, NgChartsModule],
   template: `
     <div class="toolbar">
       <a [routerLink]="['/properties', propertyId()]" class="btn btn-secondary">← Voltar à propriedade</a>
@@ -134,11 +134,12 @@ export class PlotDetailComponent implements OnInit {
     return status;
   }
 
-  private buildChart(type: string, label: string, color: string): ChartConfiguration<'line'>['data'] & { options: ChartConfiguration<'line'>['options'] } {
+  private buildChart(type: string, label: string, color: string): ChartConfiguration<'line'> {
     const list = this.readings().filter((r) => r.type === type);
     const labels = list.map((r) => new Date(r.timestamp).toLocaleDateString());
     const values = list.map((r) => r.value);
     return {
+      type: 'line',
       data: {
         labels,
         datasets: [{ data: values, label, borderColor: color, fill: false, tension: 0.3 }],
