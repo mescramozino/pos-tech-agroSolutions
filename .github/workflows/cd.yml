@@ -18,10 +18,11 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set image prefix (lowercase for Docker)
+        id: image_prefix
         run: |
           OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           REPO_LOWER=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
-          echo "IMAGE_PREFIX=ghcr.io/${OWNER_LOWER}/${REPO_LOWER}" >> $GITHUB_ENV
+          echo "prefix=ghcr.io/${OWNER_LOWER}/${REPO_LOWER}" >> $GITHUB_OUTPUT
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -39,7 +40,7 @@ jobs:
           context: ./identity
           file: ./identity/Dockerfile
           push: true
-          tags: ${{ env.IMAGE_PREFIX }}/identity-api:latest
+          tags: ${{ steps.image_prefix.outputs.prefix }}/identity-api:latest
 
       - name: Build and push properties-api
         uses: docker/build-push-action@v6
@@ -47,7 +48,7 @@ jobs:
           context: ./properties
           file: ./properties/Dockerfile
           push: true
-          tags: ${{ env.IMAGE_PREFIX }}/properties-api:latest
+          tags: ${{ steps.image_prefix.outputs.prefix }}/properties-api:latest
 
       - name: Build and push ingestion-api
         uses: docker/build-push-action@v6
@@ -55,7 +56,7 @@ jobs:
           context: ./ingestion
           file: ./ingestion/Dockerfile
           push: true
-          tags: ${{ env.IMAGE_PREFIX }}/ingestion-api:latest
+          tags: ${{ steps.image_prefix.outputs.prefix }}/ingestion-api:latest
 
       - name: Build and push analysis-api
         uses: docker/build-push-action@v6
@@ -63,7 +64,7 @@ jobs:
           context: ./analysis
           file: ./analysis/Dockerfile
           push: true
-          tags: ${{ env.IMAGE_PREFIX }}/analysis-api:latest
+          tags: ${{ steps.image_prefix.outputs.prefix }}/analysis-api:latest
 
       - name: Build and push dashboard
         uses: docker/build-push-action@v6
@@ -71,7 +72,7 @@ jobs:
           context: ./dashboard
           file: ./dashboard/Dockerfile
           push: true
-          tags: ${{ env.IMAGE_PREFIX }}/dashboard:latest
+          tags: ${{ steps.image_prefix.outputs.prefix }}/dashboard:latest
 
   deploy:
     name: Deploy (Kind)
