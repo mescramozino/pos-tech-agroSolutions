@@ -1,0 +1,7 @@
+# Imagem mínima para rodar o script de seed (curl + jq).
+FROM alpine:3.19
+RUN apk add --no-cache curl jq
+WORKDIR /app
+COPY seed-sensor-readings.sh /app/seed-sensor-readings.sh
+RUN chmod +x /app/seed-sensor-readings.sh
+ENTRYPOINT ["/app/seed-sensor-readings.sh"]

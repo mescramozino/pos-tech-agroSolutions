@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Properties.Api.Services;
 using Properties.Application;
+using Properties.Domain;
 using Properties.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -62,11 +63,7 @@ builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<Properties.Infrastructure.PropertiesDbContext>();
-    db.Database.EnsureCreated();
-}
+await EnsureDatabaseAsync(app);
 
 app.UseSwagger();
 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Properties API v1"));
@@ -80,4 +77,57 @@ app.MapMetrics();
 
 app.Run();
 
-public partial class Program { }
+public partial class Program
+{
+    static async Task EnsureDatabaseAsync(WebApplication app)
+    {
+        const int maxAttempts = 15;
+        const int delayMs = 2000;
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<Properties.Infrastructure.PropertiesDbContext>();
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            try
+            {
+                await db.Database.EnsureCreatedAsync();
+                await SeedPropertiesAndPlotsAsync(db);
+                return;
+            }
+            catch (Exception)
+            {
+                if (attempt == maxAttempts) throw;
+                await Task.Delay(delayMs);
+            }
+        }
+    }
+
+    static readonly Guid SeededProducerId = new("A1000000-1000-1000-1000-000000000001");
+
+    static async Task SeedPropertiesAndPlotsAsync(Properties.Infrastructure.PropertiesDbContext db)
+    {
+        if (await db.Properties.AnyAsync()) return;
+
+        var propertyId = Guid.NewGuid();
+        var now = DateTime.UtcNow;
+
+        var property = new Property
+        {
+            Id = propertyId,
+            ProducerId = SeededProducerId,
+            Name = "Fazenda Modelo",
+            Location = "Região Sul",
+            CreatedAt = now
+        };
+        db.Properties.Add(property);
+
+        var plots = new[]
+        {
+            new Plot { Id = Guid.NewGuid(), PropertyId = propertyId, Name = "Talhão Norte", Culture = "Soja", CreatedAt = now },
+            new Plot { Id = Guid.NewGuid(), PropertyId = propertyId, Name = "Talhão Sul", Culture = "Milho", CreatedAt = now },
+            new Plot { Id = Guid.NewGuid(), PropertyId = propertyId, Name = "Talhão Leste", Culture = "Soja", CreatedAt = now }
+        };
+        foreach (var plot in plots) db.Plots.Add(plot);
+
+        await db.SaveChangesAsync();
+    }
+}

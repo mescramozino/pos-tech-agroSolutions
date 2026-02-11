@@ -17,7 +17,7 @@ MVP de agricultura de precisão: autenticação, cadastro de propriedades e talh
 identity/     → Serviço de Identidade (registro, login, JWT)
 properties/   → Serviço de Propriedades e Talhões (CRUD)
 ingestion/    → Serviço de Ingestão de dados de sensores (publica em RabbitMQ)
-analysis/     → Serviço de Análise e Alertas (consome fila, InfluxDB, regra de seca, API de previsão)
+analysis/     → Serviço de Análise e Alertas (consome fila, PostgreSQL para leituras, regra de seca, API de previsão)
 dashboard/    → Frontend Angular (login, propriedades, talhões, gráficos, alertas, previsão do tempo)
 docs/         → Diagramas, contratos e passo a passo
 ```
@@ -28,11 +28,10 @@ docs/         → Diagramas, contratos e passo a passo
 |---------------|------------|
 | Backend       | .NET 8 (ASP.NET Core Web API) – Identity, Properties, Ingestion, Analysis |
 | Frontend      | Angular 17 (standalone, ng2-charts) |
-| Banco         | PostgreSQL (Docker); SQLite em testes locais |
-| Séries temporais | InfluxDB 2 (leituras de sensores no Analysis) |
+| Banco         | PostgreSQL (Docker); SQLite em testes locais; leituras de sensores no Analysis em PostgreSQL |
 | Mensageria    | RabbitMQ (fila `sensor.readings`) |
 | Previsão do tempo | Open-Meteo (API pública) |
-| Infra local   | Docker Compose (Postgres, RabbitMQ, InfluxDB, 4 APIs, dashboard) |
+| Infra local   | Docker Compose (Postgres, RabbitMQ, 4 APIs, dashboard) |
 
 CI no GitHub Actions (build + testes). Kubernetes e CD pendentes.
 
@@ -41,6 +40,52 @@ CI no GitHub Actions (build + testes). Kubernetes e CD pendentes.
 - **Docker e Docker Compose** – para subir o stack completo.
 - **.NET 8** – para build e testes locais das APIs.
 - **Node.js 18+** – apenas se for rodar o dashboard com `npm start` (desenvolvimento).
+
+## Como executar o projeto (com tabelas populadas)
+
+### Opção A: Docker (recomendado) – tudo populado na primeira subida
+
+1. Na **raiz do projeto**, execute:
+
+   ```bash
+   docker-compose up --build
+   ```
+
+2. O que acontece:
+   - **PostgreSQL** e **RabbitMQ** sobem primeiro.
+   - As **4 APIs** (Identity, Properties, Ingestion, Analysis) sobem e criam as tabelas na primeira requisição/inicialização.
+   - **Identity** insere o usuário **produtor@agro.local** / **Senha123!**.
+   - **Properties** insere a propriedade **"Fazenda Modelo"** e os 3 talhões (Norte, Sul, Leste).
+   - O serviço **seed-sensor-readings** roda em seguida e popula leituras de sensores (umidade/temperatura) para esses talhões via API de Ingestão → RabbitMQ → Analysis → PostgreSQL.
+   - O **dashboard** fica disponível na porta 4200.
+
+3. Acesse **http://localhost:4200**, faça login com **produtor@agro.local** / **Senha123!** e use os gráficos/alertas dos talhões.
+
+Se o seed rodar antes dos talhões existirem (raro), execute de novo depois que o stack estiver estável:
+
+```bash
+docker-compose run --rm seed-sensor-readings
+```
+
+### Opção B: Sem Docker (APIs locais)
+
+1. Suba **PostgreSQL** e **RabbitMQ** (ex.: só os serviços do compose: `docker-compose up -d postgres rabbitmq`).
+2. Crie os bancos: `identity_db`, `properties_db`, `analysis_db` (use o script em `docker/postgres/init-multiple-databases.sh` ou crie manualmente).
+3. Em **4 terminais**, na raiz do projeto, rode cada API:
+   - `dotnet run --project identity/Identity.Api`
+   - `dotnet run --project properties/Properties.Api`
+   - `dotnet run --project ingestion/Ingestion.Api`
+   - `dotnet run --project analysis/Analysis.Api`
+4. Na primeira requisição, Identity e Properties criam tabelas e inserem o produtor + Fazenda Modelo + talhões.
+5. Para popular as **leituras de sensores**, execute o script (PowerShell na raiz):
+
+   ```powershell
+   .\scripts\seed-sensor-readings.ps1
+   ```
+
+6. Rode o dashboard: `cd dashboard && npm install && npm start` e acesse http://localhost:4200.
+
+Detalhes em [Passo a passo: Git, Docker e execução](docs/PASSO_A_PASSO_GIT_E_DOCKER.md).
 
 ## Rodar com Docker (recomendado)
 
@@ -59,9 +104,8 @@ docker-compose up --build
 | Analysis API  | 5004   | http://localhost:5004 |
 | PostgreSQL    | 5432   | localhost:5432 (user: agro, password: secret) |
 | RabbitMQ      | 5672, 15672 | AMQP e management UI http://localhost:15672 (agro/secret) |
-| InfluxDB      | 8086   | http://localhost:8086 (agro/secret, org: agro, bucket: sensor_readings) |
 
-Abra **http://localhost:4200**, registre um usuário ou faça login, e use: Propriedades, talhões, gráficos por talhão, alertas e widget de previsão do tempo.
+Abra **http://localhost:4200**, registre um usuário ou faça login. Na primeira subida, as tabelas são criadas automaticamente e são inseridos dados iniciais: usuário **produtor@agro.local** / **Senha123!**, uma propriedade **"Fazenda Modelo"** e três talhões (Talhão Norte – Soja, Talhão Sul – Milho, Talhão Leste – Soja) para uso em testes. O serviço **seed-sensor-readings** roda junto com o `docker-compose up` e popula leituras de sensores para esses talhões (depois de Identity, Properties e Ingestion estarem no ar).
 
 ## Rodar o dashboard em desenvolvimento
 
@@ -77,9 +121,9 @@ Acesse http://localhost:4200. O proxy (`proxy.conf.json`) redireciona `/api/iden
 
 ## Rodar as APIs localmente (sem Docker)
 
-1. Subir **PostgreSQL** (ou usar o do Docker na porta 5432), **RabbitMQ** (5672) e **InfluxDB** (8086), ou usar apenas Postgres + RabbitMQ (sem InfluxDB: a API de readings retorna vazio).
+1. Subir **PostgreSQL** (ou usar o do Docker na porta 5432) e **RabbitMQ** (5672).
 2. Criar os bancos: `identity_db`, `properties_db`, `analysis_db` (script em `docker/postgres/init-multiple-databases.sh`).
-3. Em cada pasta de serviço (`identity`, `properties`, `ingestion`, `analysis`), configurar `appsettings.Development.json` (connection strings, RabbitMQ, InfluxDB) e executar `dotnet run` no projeto `.Api`.
+3. Em cada pasta de serviço (`identity`, `properties`, `ingestion`, `analysis`), configurar `appsettings.Development.json` (connection strings, RabbitMQ) e executar `dotnet run` no projeto `.Api`.
 
 Detalhes no [passo a passo](docs/PASSO_A_PASSO_GIT_E_DOCKER.md).
 
@@ -96,7 +140,7 @@ O pipeline no GitHub Actions executa build e esses testes em cada push.
 
 ## Status do projeto
 
-- **Concluído:** Fases 1 a 3 (arquitetura, quatro microsserviços, RabbitMQ, InfluxDB para sensores, dashboard Angular, previsão do tempo).
+- **Concluído:** Fases 1 a 3 (arquitetura, quatro microsserviços, RabbitMQ, leituras de sensores em PostgreSQL, dashboard Angular, previsão do tempo).
 - **Parcial:** CI (build + testes); CD pendente.
 - **Pendente:** Kubernetes, observabilidade (Prometheus/Grafana), vídeo e entrega final.
 

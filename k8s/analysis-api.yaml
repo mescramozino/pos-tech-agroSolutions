@@ -44,23 +44,6 @@ spec:
                   key: RABBITMQ_DEFAULT_PASS
             - name: RabbitMQ__Queue
               value: sensor.readings
-            - name: InfluxDB__Url
-              value: http://influxdb:8086
-            - name: InfluxDB__Token
-              valueFrom:
-                secretKeyRef:
-                  name: influxdb-secret
-                  key: DOCKER_INFLUXDB_INIT_ADMIN_TOKEN
-            - name: InfluxDB__Org
-              valueFrom:
-                secretKeyRef:
-                  name: influxdb-secret
-                  key: DOCKER_INFLUXDB_INIT_ORG
-            - name: InfluxDB__Bucket
-              valueFrom:
-                secretKeyRef:
-                  name: influxdb-secret
-                  key: DOCKER_INFLUXDB_INIT_BUCKET
           resources:
             requests:
               memory: "128Mi"

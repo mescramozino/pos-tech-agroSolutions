@@ -123,7 +123,6 @@ jobs:
           kubectl apply -f k8s/configmap-postgres-init.yaml -n agrosolutions
           kubectl apply -f k8s/postgres.yaml -n agrosolutions
           kubectl apply -f k8s/rabbitmq.yaml -n agrosolutions
-          kubectl apply -f k8s/influxdb.yaml -n agrosolutions
           kubectl apply -f k8s/identity-api.yaml -n agrosolutions
           kubectl apply -f k8s/properties-api.yaml -n agrosolutions
           kubectl apply -f k8s/ingestion-api.yaml -n agrosolutions
