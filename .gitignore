@@ -1,0 +1,93 @@
+# Build
+bin/
+obj/
+[Bb]in/
+[Oo]bj/
+*.user
+*.userosscache
+*.suo
+*.cache
+*.dll
+*.exe
+*.pdb
+*.log
+.vs/
+*.db
+*.db-shm
+*.db-wal
+
+# .NET
+project.lock.json
+project.fragment.lock.json
+artifacts/
+[Dd]ebug/
+[Rr]elease/
+*.nupkg
+*.snupkg
+packages/
+TestResults/
+[Tt]est[Rr]esult*/
+coverage*.json
+coverage*.xml
+*.DotSettings.user
+
+# Node / npm (dashboard)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+.pnp.*
+lerna-debug.log*
+
+# Angular
+dashboard/dist/
+dashboard/.angular/
+dashboard/.tmp/
+*.tsbuildinfo
+
+# IDE
+.idea/
+*.rsuser
+*.sln.docstates
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Environment / secrets
+.env
+.env.local
+.env.*.local
+*.local
+appsettings.*.local.json
+secrets.json
+
+# Docker (local overrides, keep docker-compose.yml)
+docker-compose.override.yml
+.docker/
+
+# Logs and temp
+logs/
+*.log
+tmp/
+temp/
+*.tmp
+*.temp
+*.swp
+*~
+
+# Certificates (dev)
+*.pfx
+
+# Temporário – arquivos Markdown
+*.md
+*.pdf

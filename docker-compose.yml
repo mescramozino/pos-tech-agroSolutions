@@ -1,0 +1,153 @@
+# AgroSolutions IoT – Stack completo
+# Portas: 5001 Identity, 5002 Properties, 5003 Ingestion, 5004 Analysis, 4200 Dashboard, 5432 Postgres, 5672/15672 RabbitMQ, 8086 InfluxDB
+# Acesso: Dashboard http://localhost:4200 (login → propriedades, talhões, gráficos, alertas, previsão do tempo)
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: agro
+      RABBITMQ_DEFAULT_PASS: secret
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: agro
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init-multiple-databases.sh:/docker-entrypoint-initdb.d/init-multiple-databases.sh
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agro -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  influxdb:
+    image: influxdb:2.7-alpine
+    ports:
+      - "8086:8086"
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: agro
+      DOCKER_INFLUXDB_INIT_PASSWORD: secret
+      DOCKER_INFLUXDB_INIT_ORG: agro
+      DOCKER_INFLUXDB_INIT_BUCKET: sensor_readings
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: agro-influx-token-secret
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://localhost:8086/health 2>/dev/null | grep -q status || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  identity-api:
+    build:
+      context: ./identity
+      dockerfile: Dockerfile
+    ports:
+      - "5001:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=identity_db;Username=agro;Password=secret"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: on-failure
+
+  properties-api:
+    build:
+      context: ./properties
+      dockerfile: Dockerfile
+    ports:
+      - "5002:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=properties_db;Username=agro;Password=secret"
+      Jwt__Secret: "AgroSolutionsIdentitySecretKeyMin32Chars!"
+      Jwt__Issuer: "Identity.Api"
+      Jwt__Audience: "AgroSolutions"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: on-failure
+
+  ingestion-api:
+    build:
+      context: ./ingestion
+      dockerfile: Dockerfile
+    ports:
+      - "5003:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      RabbitMQ__Host: rabbitmq
+      RabbitMQ__Port: 5672
+      RabbitMQ__User: agro
+      RabbitMQ__Password: secret
+      RabbitMQ__Queue: sensor.readings
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: on-failure
+
+  analysis-api:
+    build:
+      context: ./analysis
+      dockerfile: Dockerfile
+    ports:
+      - "5004:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=analysis_db;Username=agro;Password=secret"
+      RabbitMQ__Host: rabbitmq
+      RabbitMQ__Port: 5672
+      RabbitMQ__User: agro
+      RabbitMQ__Password: secret
+      RabbitMQ__Queue: sensor.readings
+      InfluxDB__Url: http://influxdb:8086
+      InfluxDB__Token: agro-influx-token-secret
+      InfluxDB__Org: agro
+      InfluxDB__Bucket: sensor_readings
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      influxdb:
+        condition: service_healthy
+    restart: on-failure
+
+  dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    ports:
+      - "4200:80"
+    depends_on:
+      - identity-api
+      - properties-api
+      - analysis-api
+    restart: on-failure
+
+volumes:
+  postgres_data:
+  influxdb_data:

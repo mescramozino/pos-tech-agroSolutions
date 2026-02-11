@@ -1,0 +1,7 @@
+bin
+obj
+**/Identity.Api.Tests
+.git
+.vs
+*.user
+*.db
