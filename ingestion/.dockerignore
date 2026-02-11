@@ -1,0 +1,6 @@
+bin
+obj
+**/Ingestion.Api.Tests
+.git
+.vs
+*.user

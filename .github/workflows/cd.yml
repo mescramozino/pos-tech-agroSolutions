@@ -1,0 +1,134 @@
+# CD: build das imagens Docker, push para GHCR e deploy em Kubernetes (Kind).
+# Pré-requisito: Settings → Actions → General → "Read and write permissions" para GITHUB_TOKEN.
+# Guia: docs/PASSO_A_PASSO_CD.md
+
+name: CD
+
+on:
+  push:
+    branches: [main, master]
+
+env:
+  IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push identity-api
+        uses: docker/build-push-action@v6
+        with:
+          context: ./identity
+          file: ./identity/Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_PREFIX }}/identity-api:latest
+
+      - name: Build and push properties-api
+        uses: docker/build-push-action@v6
+        with:
+          context: ./properties
+          file: ./properties/Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_PREFIX }}/properties-api:latest
+
+      - name: Build and push ingestion-api
+        uses: docker/build-push-action@v6
+        with:
+          context: ./ingestion
+          file: ./ingestion/Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_PREFIX }}/ingestion-api:latest
+
+      - name: Build and push analysis-api
+        uses: docker/build-push-action@v6
+        with:
+          context: ./analysis
+          file: ./analysis/Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_PREFIX }}/analysis-api:latest
+
+      - name: Build and push dashboard
+        uses: docker/build-push-action@v6
+        with:
+          context: ./dashboard
+          file: ./dashboard/Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_PREFIX }}/dashboard:latest
+
+  deploy:
+    name: Deploy (Kind)
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Replace image names in manifests
+        run: |
+          sed -i "s|agrosolutions/identity-api:latest|${{ env.IMAGE_PREFIX }}/identity-api:latest|g" k8s/identity-api.yaml
+          sed -i "s|agrosolutions/properties-api:latest|${{ env.IMAGE_PREFIX }}/properties-api:latest|g" k8s/properties-api.yaml
+          sed -i "s|agrosolutions/ingestion-api:latest|${{ env.IMAGE_PREFIX }}/ingestion-api:latest|g" k8s/ingestion-api.yaml
+          sed -i "s|agrosolutions/analysis-api:latest|${{ env.IMAGE_PREFIX }}/analysis-api:latest|g" k8s/analysis-api.yaml
+          sed -i "s|agrosolutions/dashboard:latest|${{ env.IMAGE_PREFIX }}/dashboard:latest|g" k8s/dashboard.yaml
+
+      - name: Install Kind and kubectl
+        uses: engineerd/setup-kind@v0.6.2
+        with:
+          version: v0.20.0
+
+      - name: Create Kind cluster
+        run: kind create cluster --wait 2m
+
+      - name: Apply namespace
+        run: kubectl apply -f k8s/namespace.yaml
+
+      - name: Create GHCR pull secret
+        run: |
+          kubectl create secret docker-registry ghcr-secret \
+            --docker-server=ghcr.io \
+            --docker-username=${{ github.actor }} \
+            --docker-password=${{ secrets.GITHUB_TOKEN }} \
+            -n agrosolutions
+
+      - name: Apply infrastructure and apps
+        run: |
+          kubectl apply -f k8s/secrets.yaml -n agrosolutions
+          kubectl apply -f k8s/configmap-postgres-init.yaml -n agrosolutions
+          kubectl apply -f k8s/postgres.yaml -n agrosolutions
+          kubectl apply -f k8s/rabbitmq.yaml -n agrosolutions
+          kubectl apply -f k8s/influxdb.yaml -n agrosolutions
+          kubectl apply -f k8s/identity-api.yaml -n agrosolutions
+          kubectl apply -f k8s/properties-api.yaml -n agrosolutions
+          kubectl apply -f k8s/ingestion-api.yaml -n agrosolutions
+          kubectl apply -f k8s/analysis-api.yaml -n agrosolutions
+          kubectl apply -f k8s/dashboard.yaml -n agrosolutions
+          kubectl apply -f k8s/prometheus.yaml -n agrosolutions
+          kubectl apply -f k8s/grafana.yaml -n agrosolutions
+          kubectl apply -f k8s/ingress.yaml -n agrosolutions
+
+      - name: Patch deployments to use GHCR pull secret
+        run: |
+          for dep in identity-api properties-api ingestion-api analysis-api dashboard; do
+            kubectl patch deployment $dep -n agrosolutions -p '{"spec":{"template":{"spec":{"imagePullSecrets":[{"name":"ghcr-secret"}]}}}}'
+          done
+
+      - name: Wait for deployments
+        run: |
+          kubectl wait --for=condition=available --timeout=180s deployment/identity-api deployment/properties-api deployment/ingestion-api deployment/analysis-api deployment/dashboard -n agrosolutions || true

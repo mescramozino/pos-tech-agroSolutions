@@ -1,0 +1,7 @@
+bin
+obj
+**/Properties.Api.Tests
+.git
+.vs
+*.user
+*.db

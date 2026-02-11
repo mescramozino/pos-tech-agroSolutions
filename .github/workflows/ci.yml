@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Build solution
+        run: dotnet build hacakton.sln -c Release
+
+      - name: Test Identity
+        run: dotnet test identity/Identity.Api.Tests/Identity.Api.Tests.csproj -v normal
+
+      - name: Test Properties
+        run: dotnet test properties/Properties.Api.Tests/Properties.Api.Tests.csproj -v normal
+
+      - name: Test Ingestion
+        run: dotnet test ingestion/Ingestion.Api.Tests/Ingestion.Api.Tests.csproj -v normal

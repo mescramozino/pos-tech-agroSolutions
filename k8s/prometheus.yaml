@@ -1,0 +1,98 @@
+# Prometheus para observabilidade (métricas das APIs).
+# As APIs expõem /metrics (formato Prometheus) após adicionar prometheus-net.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: agrosolutions
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+    scrape_configs:
+      - job_name: 'identity-api'
+        static_configs:
+          - targets: ['identity-api:8080']
+        metrics_path: /metrics
+      - job_name: 'properties-api'
+        static_configs:
+          - targets: ['properties-api:8080']
+        metrics_path: /metrics
+      - job_name: 'ingestion-api'
+        static_configs:
+          - targets: ['ingestion-api:8080']
+        metrics_path: /metrics
+      - job_name: 'analysis-api'
+        static_configs:
+          - targets: ['analysis-api:8080']
+        metrics_path: /metrics
+      - job_name: 'prometheus'
+        static_configs:
+          - targets: ['localhost:9090']
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: agrosolutions
+  labels:
+    app: prometheus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      containers:
+        - name: prometheus
+          image: prom/prometheus:v2.47.0
+          args:
+            - '--config.file=/etc/prometheus/prometheus.yml'
+            - '--storage.tsdb.path=/prometheus'
+            - '--web.enable-lifecycle'
+          ports:
+            - containerPort: 9090
+          volumeMounts:
+            - name: config
+              mountPath: /etc/prometheus
+            - name: storage
+              mountPath: /prometheus
+      volumes:
+        - name: config
+          configMap:
+            name: prometheus-config
+        - name: storage
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: agrosolutions
+spec:
+  selector:
+    app: prometheus
+  ports:
+    - port: 9090
+      targetPort: 9090
+  type: ClusterIP
+---
+# NodePort para acessar a UI do Prometheus (opcional)
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-nodeport
+  namespace: agrosolutions
+spec:
+  type: NodePort
+  selector:
+    app: prometheus
+  ports:
+    - port: 9090
+      targetPort: 9090
+      nodePort: 30090
