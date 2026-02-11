@@ -46,9 +46,9 @@ public class RabbitMqSensorReadingsPublisher : ISensorReadingsPublisher
                 Password = _password
             };
             using var connection = factory.CreateConnection();
-            using var channel = connection.CreateChannel();
+            using var channel = connection.CreateModel();
             channel.QueueDeclare(_queue, durable: true, exclusive: false, autoDelete: false, arguments: null);
-            channel.BasicPublish("", _queue, null, body);
+            channel.BasicPublish("", _queue, false, null, body.AsMemory());
         }
         catch
         {
