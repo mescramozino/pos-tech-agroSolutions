@@ -103,6 +103,9 @@ jobs:
         with:
           version: v0.20.0
 
+      - name: Delete existing Kind cluster (if any)
+        run: kind delete cluster || true
+
       - name: Create Kind cluster
         run: kind create cluster --wait 2m
 
