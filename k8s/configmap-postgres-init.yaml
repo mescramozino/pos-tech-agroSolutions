@@ -4,6 +4,12 @@ metadata:
   name: postgres-init
   namespace: agrosolutions
 data:
+  # Ordem: 00-* roda antes; permite conexões da rede dos pods (evita 28000: no pg_hba.conf entry).
+  00-pg-hba-allow-network.sh: |
+    #!/bin/bash
+    set -e
+    echo "host all all 0.0.0.0/0 scram-sha-256" >> "$PGDATA/pg_hba.conf"
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" -c "SELECT pg_reload_conf();"
   init-multiple-databases.sh: |
     #!/bin/bash
     set -e
