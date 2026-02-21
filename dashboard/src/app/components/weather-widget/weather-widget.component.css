@@ -1,0 +1,14 @@
+.weather-widget { max-width: 420px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.weather-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.75rem; }
+.weather-header h3 { margin: 0; font-size: 1rem; font-weight: 600; color: #1b5e20; }
+.weather-search { display: flex; gap: 0.5rem; }
+.weather-search input { width: 140px; padding: 0.5rem 0.6rem; border: 1px solid #d4d4c8; border-radius: 6px; font-size: 0.9rem; }
+.weather-current { display: flex; flex-direction: column; gap: 0.25rem; padding: 0.5rem 0; border-bottom: 1px solid #eee; }
+.weather-location { font-weight: 600; color: #1b5e20; }
+.weather-temp { font-size: 1.5rem; font-weight: 700; color: #1b5e20; }
+.weather-meta { font-size: 0.85rem; color: #666; }
+.weather-daily { display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.5rem; }
+.weather-day { display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; }
+.weather-date { min-width: 80px; color: #666; }
+.weather-minmax { font-weight: 500; color: #333; }
+.weather-precip { color: #1565c0; }

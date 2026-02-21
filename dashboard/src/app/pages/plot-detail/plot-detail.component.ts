@@ -1,5 +1,6 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { NgChartsModule } from 'ng2-charts';
 import { ChartConfiguration } from 'chart.js';
 import { PropertiesService, Plot } from '../../services/properties.service';
@@ -8,60 +9,9 @@ import { AnalysisService, Reading, PlotStatus } from '../../services/analysis.se
 @Component({
   selector: 'app-plot-detail',
   standalone: true,
-  imports: [RouterLink, NgChartsModule],
-  template: `
-    <div class="toolbar">
-      <a [routerLink]="['/properties', propertyId()]" class="btn btn-secondary">← Voltar à propriedade</a>
-    </div>
-    @if (loading()) {
-      <p>Carregando...</p>
-    }
-    @if (error()) {
-      <p class="status-drought">{{ error() }}</p>
-    }
-    @if (plot(); as pl) {
-      <div class="card">
-        <h1>{{ pl.name }}</h1>
-        <p>Cultura: {{ pl.culture }}</p>
-        @if (status(); as st) {
-          <p [class]="getStatusClass(st.status)">
-            Status: {{ getStatusLabel(st.status) }} — {{ st.message }}
-          </p>
-        }
-      </div>
-
-      <h2>Leituras de sensores</h2>
-      @if (readings().length === 0) {
-        <p>Nenhuma leitura no período. Envie dados pela API de Ingestão.</p>
-      }
-      @if (readings().length > 0) {
-        <div class="chart-container">
-          <h3>Umidade (%)</h3>
-          <canvas baseChart
-            [data]="chartMoisture().data"
-            [options]="chartMoisture().options"
-            [type]="'line'">
-          </canvas>
-        </div>
-        <div class="chart-container">
-          <h3>Temperatura (°C)</h3>
-          <canvas baseChart
-            [data]="chartTemperature().data"
-            [options]="chartTemperature().options"
-            [type]="'line'">
-          </canvas>
-        </div>
-        <div class="chart-container">
-          <h3>Precipitação (mm)</h3>
-          <canvas baseChart
-            [data]="chartPrecipitation().data"
-            [options]="chartPrecipitation().options"
-            [type]="'line'">
-          </canvas>
-        </div>
-      }
-    }
-  `,
+  imports: [RouterLink, FormsModule, NgChartsModule],
+  templateUrl: './plot-detail.component.html',
+  styleUrls: ['./plot-detail.component.css'],
 })
 export class PlotDetailComponent implements OnInit {
   plot = signal<Plot | null>(null);
@@ -70,6 +20,9 @@ export class PlotDetailComponent implements OnInit {
   loading = signal(true);
   error = signal('');
   propertyId = signal('');
+  editing = signal(false);
+  editName = '';
+  editCulture = '';
 
   private plotId = '';
 
@@ -134,9 +87,31 @@ export class PlotDetailComponent implements OnInit {
     return status;
   }
 
+  startEdit(pl: Plot) {
+    this.editName = pl.name;
+    this.editCulture = pl.culture;
+    this.editing.set(true);
+  }
+
+  cancelEdit() {
+    this.editing.set(false);
+  }
+
+  savePlot() {
+    const pl = this.plot();
+    if (!pl) return;
+    this.props.updatePlot(pl.id, { name: this.editName, culture: this.editCulture }).subscribe({
+      next: () => {
+        this.plot.set({ ...pl, name: this.editName, culture: this.editCulture });
+        this.editing.set(false);
+      },
+      error: () => this.error.set('Erro ao salvar talhão.'),
+    });
+  }
+
   private buildChart(type: string, label: string, color: string): ChartConfiguration<'line'> {
     const list = this.readings().filter((r) => r.type === type);
-    const labels = list.map((r) => new Date(r.timestamp).toLocaleDateString());
+    const labels = list.map((r) => new Date(r.timestamp).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }));
     const values = list.map((r) => r.value);
     return {
       type: 'line',

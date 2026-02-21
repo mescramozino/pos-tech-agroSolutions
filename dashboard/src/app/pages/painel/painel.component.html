@@ -1,0 +1,215 @@
+<div class="painel-page">
+  <div class="painel-grid">
+    <div class="painel-main">
+
+      <div class="painel-card realtime-card">
+        <div class="realtime-header">
+          <span class="realtime-icon">🌤️</span>
+          <h3 class="realtime-title">Previsão do tempo</h3>
+          <div class="weather-search">
+            <input type="text" class="weather-search-input" [(ngModel)]="weatherCityInput"
+              placeholder="Cidade (ex: São Paulo)" (keyup.enter)="searchWeather()" />
+            <button type="button" class="btn btn-primary btn-weather-search" (click)="searchWeather()"
+              [disabled]="weatherLoading()">
+              Buscar
+            </button>
+          </div>
+        </div>
+        @if (weatherLoading()) {
+        <p class="realtime-loading">Carregando previsão...</p>
+        }
+        @if (weatherError()) {
+        <p class="realtime-error">{{ weatherError() }}</p>
+        }
+        @if (weatherForecast(); as f) {
+        <div class="realtime-grid">
+          <div class="realtime-item">
+            <span class="realtime-item-icon">🌡️</span>
+            <div>
+              <span class="realtime-item-label">Temperatura</span>
+              <span class="realtime-item-value">{{ f.temperatureC | number:'1.1-1' }} °C</span>
+            </div>
+          </div>
+          <div class="realtime-item">
+            <span class="realtime-item-icon">💧</span>
+            <div>
+              <span class="realtime-item-label">Umidade</span>
+              <span class="realtime-item-value">{{ f.humidityPercent }} %</span>
+            </div>
+          </div>
+          <div class="realtime-item">
+            <span class="realtime-item-icon">🌧️</span>
+            <div>
+              <span class="realtime-item-label">Precipitação</span>
+              <span class="realtime-item-value">{{ f.precipitationMm | number:'1.1-1' }} mm</span>
+            </div>
+          </div>
+        </div>
+        }
+      </div>
+
+      <div class="painel-summary">
+        <div class="painel-card summary-card">
+          <span class="summary-icon summary-icon-properties">🏠</span>
+          <div class="summary-content">
+            <span class="summary-label">Propriedades</span>
+            <span class="summary-value">{{ loadingSummary() ? '...' : (propertiesCount() ?? '-') }}</span>
+            <span class="summary-sub">{{ loadingSummary() ? '' : propertiesSub() }}</span>
+          </div>
+        </div>
+        <div class="painel-card summary-card">
+          <span class="summary-icon summary-icon-plots">🌱</span>
+          <div class="summary-content">
+            <span class="summary-label">Talhões ativos</span>
+            <span class="summary-value">{{ loadingSummary() ? '...' : (plotsCount() ?? '-') }}</span>
+            <span class="summary-sub">{{ loadingSummary() ? '' : plotsSub() }}</span>
+          </div>
+        </div>
+        <div class="painel-card summary-card">
+          <span class="summary-icon summary-icon-sensors">📡</span>
+          <div class="summary-content">
+            <span class="summary-label">Sensores ativos</span>
+            <span class="summary-value">{{ sensorsSub() }}</span>
+            <span class="summary-sub">↑ 1 novo</span>
+          </div>
+        </div>
+        <div class="painel-card summary-card">
+          <span class="summary-icon summary-icon-alerts">🔔</span>
+          <div class="summary-content">
+            <span class="summary-label">Alertas pendentes</span>
+            <span class="summary-value">{{ loadingSummary() ? '...' : (alertsCount() ?? '-') }}</span>
+            <span class="summary-sub">{{ loadingSummary() ? '' : alertsPendingSub() }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="painel-charts">
+        <div class="painel-card chart-card">
+          <div class="chart-card-header">
+            <span class="chart-card-icon">📊</span>
+            <h3 class="chart-card-title">Leituras de sensores (7 dias)</h3>
+          </div>
+          <div class="chart-placeholder">
+            <div class="chart-placeholder-bars"></div>
+            <p class="chart-placeholder-text">Gráfico será exibido ao conectar ao backend</p>
+            <p class="chart-placeholder-desc">Tendências de temperatura, umidade e umidade do solo</p>
+          </div>
+        </div>
+        <div class="painel-card chart-card">
+          <div class="chart-card-header">
+            <span class="chart-card-icon chart-card-icon-alerts">🔔</span>
+            <h3 class="chart-card-title">Alertas por tipo</h3>
+          </div>
+          @if (loadingAlertsChart()) {
+            <div class="chart-placeholder">
+              <p class="chart-placeholder-text">Carregando alertas...</p>
+            </div>
+          } @else if (alertsForChart().length === 0) {
+            <div class="chart-placeholder">
+              <p class="chart-placeholder-text">Nenhum alerta no momento</p>
+              <p class="chart-placeholder-desc">Distribuição dos tipos de alerta</p>
+            </div>
+          } @else {
+            <div class="chart-alerts-wrap">
+              <canvas baseChart
+                [data]="alertsChartConfig().data"
+                [options]="alertsChartConfig().options"
+                [type]="'bar'">
+              </canvas>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!--
+      <div class="painel-card realtime-card">
+        <div class="realtime-header">
+          <span class="realtime-icon">⚡</span>
+          <h3 class="realtime-title">Dados em tempo real</h3>
+          <span class="realtime-badge">• Ao vivo</span>
+        </div>
+        <div class="realtime-grid">
+          <div class="realtime-item">
+            <span class="realtime-item-icon">🌡️</span>
+            <div>
+              <span class="realtime-item-label">Temperatura</span>
+              <span class="realtime-item-value">{{ formatValue(realTime().temperature, '°C') }}</span>
+            </div>
+          </div>
+          <div class="realtime-item">
+            <span class="realtime-item-icon">💧</span>
+            <div>
+              <span class="realtime-item-label">Umidade</span>
+              <span class="realtime-item-value">{{ formatValue(realTime().humidity, '%') }}</span>
+            </div>
+          </div>
+          <div class="realtime-item">
+            <span class="realtime-item-icon">🌿</span>
+            <div>
+              <span class="realtime-item-label">Umidade do solo</span>
+              <span class="realtime-item-value">{{ formatValue(realTime().soilMoisture, '%') }}</span>
+            </div>
+          </div>
+          <div class="realtime-item">
+            <span class="realtime-item-icon">🌧️</span>
+            <div>
+              <span class="realtime-item-label">Precipitação</span>
+              <span class="realtime-item-value">{{ formatValue(realTime().rainfall, 'mm') }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      -->
+
+    
+
+      <div class="painel-card readings-card">
+        <div class="readings-header">
+          <span class="readings-icon">📋</span>
+          <h3 class="readings-title">Últimas leituras</h3>
+          <a routerLink="/plots" class="btn btn-secondary btn-sm">Ver todas →</a>
+        </div>
+        <div class="readings-table-wrap">
+          <table class="readings-table">
+            <thead>
+              <tr>
+                <th>Sensor</th>
+                <th>Talhão</th>
+                <th>Temperatura</th>
+                <th>Umidade</th>
+                <th>Umidade do solo</th>
+                <th>Atualizado</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (loadingReadings()) {
+              <tr>
+                <td colspan="6" class="readings-loading">Carregando...</td>
+              </tr>
+              } @else if (latestReadings().length === 0) {
+              <tr>
+                <td colspan="6" class="readings-empty">Nenhuma leitura no período</td>
+              </tr>
+              } @else {
+              @for (row of latestReadings(); track row.plot + row.updated) {
+              <tr>
+                <td>{{ row.sensor }}</td>
+                <td>{{ row.plot }}</td>
+                <td>{{ row.temperature }}</td>
+                <td>{{ row.humidity }}</td>
+                <td>{{ row.soilMoisture }}</td>
+                <td>{{ row.updated }}</td>
+              </tr>
+              }
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+    <!--<aside class="painel-weather">
+      <app-weather-widget />
+    </aside>-->
+  </div>
+</div>

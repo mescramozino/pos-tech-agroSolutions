@@ -4,7 +4,6 @@ MVP de agricultura de precisão: autenticação, cadastro de propriedades e talh
 
 ## Documentação
 
-- [Plano de execução e implementação](PLANO_EXECUCAO_E_IMPLEMENTACAO.md)
 - [Arquitetura](docs/arquitetura.md)
 - [Contratos de API e eventos](docs/contratos.md)
 - [Passo a passo: Git, Docker e execução](docs/PASSO_A_PASSO_GIT_E_DOCKER.md)
@@ -20,6 +19,9 @@ ingestion/    → Serviço de Ingestão de dados de sensores (publica em RabbitM
 analysis/     → Serviço de Análise e Alertas (consome fila, PostgreSQL para leituras, regra de seca, API de previsão)
 dashboard/    → Frontend Angular (login, propriedades, talhões, gráficos, alertas, previsão do tempo)
 docs/         → Diagramas, contratos e passo a passo
+k8s/          → Manifests Kubernetes (APIs, Postgres, RabbitMQ, Prometheus, Grafana, Ingress)
+scripts/      → Seed de sensores (Docker), criação de bancos; ver scripts/README.md
+apoio-desenvolvimento/ → Documentos e scripts de apoio (planejamento, análises, k8s local, etc.)
 ```
 
 ## Stack
@@ -53,11 +55,13 @@ CI no GitHub Actions (build + testes). Kubernetes e CD pendentes.
 
 2. O que acontece:
    - **PostgreSQL** e **RabbitMQ** sobem primeiro.
-   - As **4 APIs** (Identity, Properties, Ingestion, Analysis) sobem e criam as tabelas na primeira requisição/inicialização.
+   - As **4 APIs** (Identity, Properties, Ingestion, Analysis) sobem em seguida, criam os bancos `identity_db`, `properties_db` e `analysis_db` se não existirem, aplicam as **migrations** (EF Core) e rodam os **seeds**.
    - **Identity** insere o usuário **produtor@agro.local** / **Senha123!**.
    - **Properties** insere a propriedade **"Fazenda Modelo"** e os 3 talhões (Norte, Sul, Leste).
    - O serviço **seed-sensor-readings** roda em seguida e popula leituras de sensores (umidade/temperatura) para esses talhões via API de Ingestão → RabbitMQ → Analysis → PostgreSQL.
    - O **dashboard** fica disponível na porta 4200.
+
+   **Se as tabelas ou seeds não aparecerem** (ex.: volume do Postgres já existia e o init não rodou): pare o stack (`docker compose down`), remova o volume e suba de novo (`docker compose up --build`) ou execute `.\scripts\docker-create-databases.ps1` com o stack rodando e depois `docker compose restart identity-api properties-api analysis-api`.
 
 3. Acesse **http://localhost:4200**, faça login com **produtor@agro.local** / **Senha123!** e use os gráficos/alertas dos talhões.
 
@@ -76,7 +80,7 @@ docker-compose run --rm seed-sensor-readings
    - `dotnet run --project properties/Properties.Api`
    - `dotnet run --project ingestion/Ingestion.Api`
    - `dotnet run --project analysis/Analysis.Api`
-4. Na primeira requisição, Identity e Properties criam tabelas e inserem o produtor + Fazenda Modelo + talhões.
+4. Na subida, cada API aplica as **migrations** (EF Core) e insere os dados iniciais: Identity (produtor produtor@agro.local), Properties (Fazenda Modelo + 3 talhões).
 5. Para popular as **leituras de sensores**, execute o script (PowerShell na raiz):
 
    ```powershell
@@ -86,6 +90,76 @@ docker-compose run --rm seed-sensor-readings
 6. Rode o dashboard: `cd dashboard && npm install && npm start` e acesse http://localhost:4200.
 
 Detalhes em [Passo a passo: Git, Docker e execução](docs/PASSO_A_PASSO_GIT_E_DOCKER.md).
+
+### Como executar as migrations (criar tabelas e dados iniciais)
+
+As **tabelas** são criadas pelas **EF Core Migrations**; os **dados iniciais** são inseridos pelo **seed** que cada API roda após a migração.
+
+#### 1. Com Docker (automático)
+
+Ao subir o stack, cada API aplica as migrations e o seed na subida:
+
+```bash
+docker compose up -d
+```
+
+- **Identity:** cria tabela `Producers` e insere o usuário **produtor@agro.local** / **Senha123!** (se estiver vazio).
+- **Properties:** cria tabelas `Properties` e `Plots` e insere a propriedade **"Fazenda Modelo"** e os 3 talhões (se estiver vazio).
+- **Analysis:** cria tabelas `Alerts` e `SensorReadings` (sem seed; leituras vêm do serviço **seed-sensor-readings** ou da ingestão).
+
+Se os bancos não existirem (volume antigo do Postgres), crie-os e reinicie as APIs:
+
+```powershell
+.\scripts\docker-create-databases.ps1
+```
+
+Se só existir a tabela `__EFMigrationsHistory` e faltarem as demais, limpe o histórico e reinicie para as migrations rodarem de novo:
+
+```powershell
+.\scripts\docker-reset-migrations.ps1
+```
+
+Depois de as APIs subirem, o serviço **seed-sensor-readings** (no `docker-compose`) popula leituras de sensores. Se não tiver rodado, execute uma vez:
+
+```bash
+docker compose run --rm seed-sensor-readings
+```
+
+#### 2. Sem Docker (manual com dotnet ef)
+
+Com **PostgreSQL** e os bancos **identity_db**, **properties_db** e **analysis_db** já criados, você pode aplicar as migrations sem subir as APIs:
+
+1. Instale a ferramenta EF Core (uma vez):
+
+   ```bash
+   dotnet tool install --global dotnet-ef
+   ```
+
+2. Defina a connection string (PowerShell; ajuste host/porta se precisar):
+
+   ```powershell
+   $env:ConnectionStrings__DefaultConnection = "Host=localhost;Port=5432;Database=identity_db;Username=agro;Password=secret"
+   ```
+
+3. Aplique as migrations em cada projeto:
+
+   ```bash
+   dotnet ef database update -p identity/Identity.Infrastructure -s identity/Identity.Api
+   dotnet ef database update -p properties/Properties.Infrastructure -s properties/Properties.Api
+   dotnet ef database update -p analysis/Analysis.Api -s analysis/Analysis.Api
+   ```
+
+   (Para Properties e Analysis, altere `Database=...` na variável de ambiente para `properties_db` e `analysis_db` antes do comando correspondente.)
+
+4. Os **dados iniciais** (usuário, Fazenda Modelo, talhões) são inseridos quando você **sobe cada API** (`dotnet run` no projeto `.Api`), pois o seed roda após a migração na subida. Para leituras de sensores, use o script `scripts/seed-sensor-readings.ps1` (ou o serviço Docker acima).
+
+Resumo: **Docker** → migrations e seed rodam ao subir os containers. **Local** → `dotnet ef database update` cria as tabelas; ao subir cada API com `dotnet run`, o seed preenche os dados iniciais.
+
+### Criar uma nova migration (após alterar o modelo)
+
+- **Identity:** `dotnet ef migrations add NomeDaAlteracao -p identity/Identity.Infrastructure -s identity/Identity.Api`
+- **Properties:** `dotnet ef migrations add NomeDaAlteracao -p properties/Properties.Infrastructure -s properties/Properties.Api`
+- **Analysis:** `dotnet ef migrations add NomeDaAlteracao -p analysis/Analysis.Api -s analysis/Analysis.Api`
 
 ## Rodar com Docker (recomendado)
 
@@ -105,7 +179,7 @@ docker-compose up --build
 | PostgreSQL    | 5432   | localhost:5432 (user: agro, password: secret) |
 | RabbitMQ      | 5672, 15672 | AMQP e management UI http://localhost:15672 (agro/secret) |
 
-Abra **http://localhost:4200**, registre um usuário ou faça login. Na primeira subida, as tabelas são criadas automaticamente e são inseridos dados iniciais: usuário **produtor@agro.local** / **Senha123!**, uma propriedade **"Fazenda Modelo"** e três talhões (Talhão Norte – Soja, Talhão Sul – Milho, Talhão Leste – Soja) para uso em testes. O serviço **seed-sensor-readings** roda junto com o `docker-compose up` e popula leituras de sensores para esses talhões (depois de Identity, Properties e Ingestion estarem no ar).
+Abra **http://localhost:4200**, registre um usuário ou faça login. Na subida, cada API aplica as **migrations** (EF Core) e insere os dados iniciais: usuário **produtor@agro.local** / **Senha123!**, propriedade **"Fazenda Modelo"** e três talhões. O serviço **seed-sensor-readings** roda junto e popula leituras de sensores (depois de Identity, Properties e Ingestion estarem no ar).
 
 ## Rodar o dashboard em desenvolvimento
 
@@ -140,8 +214,7 @@ O pipeline no GitHub Actions executa build e esses testes em cada push.
 
 ## Status do projeto
 
-- **Concluído:** Fases 1 a 3 (arquitetura, quatro microsserviços, RabbitMQ, leituras de sensores em PostgreSQL, dashboard Angular, previsão do tempo).
-- **Parcial:** CI (build + testes); CD pendente.
-- **Pendente:** Kubernetes, observabilidade (Prometheus/Grafana), vídeo e entrega final.
+- **Concluído:** Arquitetura em microsserviços, quatro APIs (Identity, Properties, Ingestion, Analysis), RabbitMQ, leituras em PostgreSQL, dashboard Angular (gráficos, alertas, previsão do tempo), motor de alertas (seca e praga). Kubernetes (manifests em `k8s/`), Prometheus e Grafana, CI e CD no GitHub Actions (build, testes, push GHCR, deploy em Kind).
+- **Pendente para entrega do hackathon:** Vídeo de demonstração (máx. 15 min) e link do repositório público.
 
-Resumo detalhado no [Plano de execução](PLANO_EXECUCAO_E_IMPLEMENTACAO.md#31-status-atual-da-implementação).
+Documentação de planejamento e análises de gap está em [apoio-desenvolvimento/](apoio-desenvolvimento/).

@@ -7,26 +7,8 @@ import { PropertiesService } from '../../services/properties.service';
   selector: 'app-property-form',
   standalone: true,
   imports: [RouterLink, FormsModule],
-  template: `
-    <div class="toolbar">
-      <a routerLink="/properties" class="btn btn-secondary">← Voltar</a>
-    </div>
-    <div class="card" style="max-width: 480px;">
-      <h1>Nova propriedade</h1>
-      @if (error) { <p class="status-drought">{{ error }}</p> }
-      <form (ngSubmit)="submit()">
-        <div class="form-group">
-          <label>Nome</label>
-          <input [(ngModel)]="name" name="name" required />
-        </div>
-        <div class="form-group">
-          <label>Localização</label>
-          <input [(ngModel)]="location" name="location" />
-        </div>
-        <button type="submit" class="btn btn-primary" [disabled]="loading">Criar</button>
-      </form>
-    </div>
-  `,
+  templateUrl: './property-form.component.html',
+  styleUrls: ['./property-form.component.css'],
 })
 export class PropertyFormComponent {
   name = '';

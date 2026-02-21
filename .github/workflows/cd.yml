@@ -122,6 +122,7 @@ jobs:
 
       - name: Apply infrastructure and apps
         run: |
+          kubectl apply -f k8s/postgres-pv.yaml
           kubectl apply -f k8s/secrets.yaml -n agrosolutions
           kubectl apply -f k8s/configmap-postgres-init.yaml -n agrosolutions
           kubectl apply -f k8s/postgres.yaml -n agrosolutions

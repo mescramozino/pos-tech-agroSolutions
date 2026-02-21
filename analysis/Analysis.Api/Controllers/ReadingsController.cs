@@ -8,10 +8,12 @@ namespace Analysis.Api.Controllers;
 public class ReadingsController : ControllerBase
 {
     private readonly ISensorReadingsTimeSeriesStore _store;
+    private readonly ILogger<ReadingsController> _logger;
 
-    public ReadingsController(ISensorReadingsTimeSeriesStore store)
+    public ReadingsController(ISensorReadingsTimeSeriesStore store, ILogger<ReadingsController> logger)
     {
         _store = store;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -22,14 +24,22 @@ public class ReadingsController : ControllerBase
         [FromQuery] string? type,
         CancellationToken ct)
     {
-        var list = await _store.GetReadingsAsync(plotId, from, to, type, ct);
-        var dtos = list.Select((r, i) => new ReadingDto(
-            ReadingIdHelper.CreateDeterministicId(r.PlotId, r.Type, r.Timestamp, i),
-            r.PlotId,
-            r.Type,
-            r.Value,
-            r.Timestamp)).ToList();
-        return Ok(dtos);
+        try
+        {
+            var list = await _store.GetReadingsAsync(plotId, from, to, type, ct);
+            var dtos = list.Select((r, i) => new ReadingDto(
+                ReadingIdHelper.CreateDeterministicId(r.PlotId, r.Type, r.Timestamp, i),
+                r.PlotId,
+                r.Type,
+                r.Value,
+                r.Timestamp)).ToList();
+            return Ok(dtos);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "GetReadings failed for PlotId={PlotId}, From={From}, To={To}", plotId, from, to);
+            return StatusCode(500, new { error = "Erro ao obter leituras. Verifique os logs do servidor." });
+        }
     }
 }
 

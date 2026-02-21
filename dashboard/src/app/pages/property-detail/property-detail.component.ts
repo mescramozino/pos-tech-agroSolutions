@@ -7,73 +7,8 @@ import { PropertiesService, Property, Plot, CreatePlotRequest } from '../../serv
   selector: 'app-property-detail',
   standalone: true,
   imports: [RouterLink, FormsModule],
-  template: `
-    <div class="toolbar">
-      <a routerLink="/properties" class="btn btn-secondary">← Voltar</a>
-    </div>
-    @if (loading()) {
-      <p>Carregando...</p>
-    }
-    @if (error()) {
-      <p class="status-drought">{{ error() }}</p>
-    }
-    @if (property(); as p) {
-      <div class="card">
-        @if (editing()) {
-          <form (ngSubmit)="saveProperty()">
-            <div class="form-group">
-              <label>Nome</label>
-              <input [(ngModel)]="editName" name="editName" required />
-            </div>
-            <div class="form-group">
-              <label>Localização</label>
-              <input [(ngModel)]="editLocation" name="editLocation" />
-            </div>
-            <button type="submit" class="btn btn-primary">Salvar</button>
-            <button type="button" class="btn btn-secondary" (click)="cancelEdit()">Cancelar</button>
-          </form>
-        } @else {
-          <h1>{{ p.name }}</h1>
-          @if (p.location) { <p>{{ p.location }}</p> }
-          <button class="btn btn-primary" (click)="startEdit(p)">Editar</button>
-          <button class="btn btn-danger" (click)="deleteProperty(p.id)">Excluir</button>
-        }
-      </div>
-
-      <h2>Talhões</h2>
-      @if (showNewPlotForm()) {
-        <div class="card">
-          <h3>Novo talhão</h3>
-          <form (ngSubmit)="createPlot()">
-            <div class="form-group">
-              <label>Nome</label>
-              <input [(ngModel)]="newPlotName" name="newPlotName" required />
-            </div>
-            <div class="form-group">
-              <label>Cultura</label>
-              <input [(ngModel)]="newPlotCulture" name="newPlotCulture" required />
-            </div>
-            <button type="submit" class="btn btn-primary">Criar</button>
-            <button type="button" class="btn btn-secondary" (click)="showNewPlotForm.set(false)">Cancelar</button>
-          </form>
-        </div>
-      } @else {
-        <button class="btn btn-primary" (click)="showNewPlotForm.set(true)" style="margin-bottom: 1rem;">Novo talhão</button>
-      }
-
-      @if (plots().length === 0 && !showNewPlotForm()) {
-        <p>Nenhum talhão. Adicione um para começar.</p>
-      }
-      @for (plot of plots(); track plot.id) {
-        <div class="card">
-          <h3><a [routerLink]="['/plots', plot.id]">{{ plot.name }}</a></h3>
-          <p>Cultura: {{ plot.culture }}</p>
-          <a [routerLink]="['/plots', plot.id]">Ver sensores e gráficos</a>
-          <button class="btn btn-danger" style="margin-left: 1rem;" (click)="deletePlot(plot)">Excluir talhão</button>
-        </div>
-      }
-    }
-  `,
+  templateUrl: './property-detail.component.html',
+  styleUrls: ['./property-detail.component.css'],
 })
 export class PropertyDetailComponent implements OnInit {
   property = signal<Property | null>(null);

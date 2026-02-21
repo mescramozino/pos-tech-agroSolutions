@@ -35,7 +35,7 @@ public class PostgresSensorReadingsStore : ISensorReadingsTimeSeriesStore
         var fromUtc = (from ?? DateTime.UtcNow.AddDays(-30)).ToUniversalTime();
         var toUtc = (to ?? DateTime.UtcNow).ToUniversalTime();
 
-        var query = _db.SensorReadings
+        IQueryable<SensorReading> query = _db.SensorReadings
             .Where(r => r.PlotId == plotId && r.Timestamp >= fromUtc && r.Timestamp <= toUtc);
 
         if (!string.IsNullOrWhiteSpace(type))

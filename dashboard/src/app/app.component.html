@@ -1,0 +1,26 @@
+@if (auth.isLoggedIn()) {
+  <div class="app-layout">
+    <app-navbar [open]="sidebarOpen" (openChange)="sidebarOpen = $event" />
+    <div class="main-wrap">
+      <header class="topbar">
+        <button type="button" class="menu-toggle" (click)="sidebarOpen = !sidebarOpen" aria-label="Menu">
+          ☰
+        </button>
+        <h1 class="page-title">{{ pageTitle }}</h1>
+        <div class="topbar-user">
+          <span class="user-avatar">👤</span>
+          <span class="user-name">{{ auth.getEmail() }}</span>
+        </div>
+      </header>
+      <main class="main">
+        <div class="main-content">
+          <router-outlet />
+        </div>
+      </main>
+    </div>
+  </div>
+} @else {
+  <main class="main-auth">
+    <router-outlet />
+  </main>
+}

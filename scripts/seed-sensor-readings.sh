@@ -1,7 +1,9 @@
 #!/bin/sh
-# Popula leituras de sensores via API (Identity -> Properties -> Ingestion).
-# Uso: dentro do container com IDENTITY_URL, PROPERTIES_URL, INGESTION_URL, EMAIL, PASSWORD.
-# Rode após as APIs estarem no ar (ex.: como serviço no docker-compose).
+# Popula leituras de sensores via API (Identity -> Properties -> Ingestion -> RabbitMQ -> Analysis).
+# Uso:
+#   - Automático: serviço seed-sensor-readings no docker-compose (roda uma vez após as APIs subirem).
+#   - Manual:     docker compose run --rm seed-sensor-readings
+# Variáveis: IDENTITY_URL, PROPERTIES_URL, INGESTION_URL, EMAIL, PASSWORD, DAYS_BACK, READINGS_PER_DAY, WAIT_MAX
 
 set -e
 
@@ -27,6 +29,18 @@ while [ $n -lt "$WAIT_MAX" ]; do
 done
 if [ $n -ge "$WAIT_MAX" ]; then echo "Timeout aguardando Identity."; exit 1; fi
 echo "Identity OK."
+
+echo "Aguardando Ingestion em $INGESTION_URL (até ${WAIT_MAX}s)..."
+n=0
+while [ $n -lt "$WAIT_MAX" ]; do
+  if curl -sf -o /dev/null "$INGESTION_URL/health" 2>/dev/null; then
+    break
+  fi
+  n=$((n + 2))
+  sleep 2
+done
+if [ $n -ge "$WAIT_MAX" ]; then echo "Timeout aguardando Ingestion."; exit 1; fi
+echo "Ingestion OK."
 
 LOGIN_RESP="$(curl -sf -X POST "$IDENTITY_URL/api/auth/login" \
   -H "Content-Type: application/json" \
@@ -64,10 +78,11 @@ echo "Encontrados $(echo $PLOT_IDS | wc -w) talhão(ões). Gerando $TOTAL_READIN
 for PLOT_ID in $PLOT_IDS; do
   BODY="$(jq -n --arg plotId "$PLOT_ID" --argjson days "$DAYS_BACK" --argjson total "$TOTAL_READINGS" '
     (now - ($days * 86400)) as $start |
+    (now | floor) as $t |
     [range($total) | . as $i |
      {
        type: (if ($i % 2) == 0 then "moisture" else "temperature" end),
-       value: (if ($i % 2) == 0 then (20 + (random * 60)) else (18 + (random * 15)) end | . * 10 | floor / 10),
+       value: (if ($i % 2) == 0 then ((($i * 7 + $t) % 61) + 20) else ((($i * 11 + $t) % 16) + 18) end | . * 10 | floor / 10),
        timestamp: (($start + ($i * (($days * 86400) / $total))) | strftime("%Y-%m-%dT%H:%M:%SZ"))
      }
     ] as $readings |
@@ -82,4 +97,6 @@ for PLOT_ID in $PLOT_IDS; do
   fi
 done
 
-echo "Seed concluído. Aguarde o Analysis processar a fila (alguns segundos) e confira o dashboard."
+echo "Seed concluído. As leituras foram enviadas ao Ingestion (RabbitMQ)."
+echo "A Analysis API consome a fila e grava em analysis_db (SensorReadings + Alerts)."
+echo "Aguarde alguns segundos e confira o dashboard em http://localhost:4200"
