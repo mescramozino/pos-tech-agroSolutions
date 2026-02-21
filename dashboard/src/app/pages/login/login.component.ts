@@ -8,28 +8,13 @@ import { AuthService } from '../../core/auth.service';
   selector: 'app-login',
   standalone: true,
   imports: [FormsModule, RouterLink],
-  template: `
-    <div class="card" style="max-width: 400px; margin: 2rem auto;">
-      <h1>Entrar</h1>
-      @if (error) { <p class="status-drought">{{ error }}</p> }
-      <form (ngSubmit)="login()">
-        <div class="form-group">
-          <label>E-mail</label>
-          <input type="email" [(ngModel)]="email" name="email" required />
-        </div>
-        <div class="form-group">
-          <label>Senha</label>
-          <input type="password" [(ngModel)]="password" name="password" required />
-        </div>
-        <button type="submit" class="btn btn-primary" [disabled]="loading">Entrar</button>
-      </form>
-      <p style="margin-top: 1rem;"><a routerLink="/register">Criar conta</a></p>
-    </div>
-  `,
+  templateUrl: './login.component.html',
+  styleUrls: ['./login.component.css'],
 })
 export class LoginComponent {
   email = '';
   password = '';
+  remember = false;
   error = '';
   loading = false;
 
@@ -38,14 +23,14 @@ export class LoginComponent {
     private auth: AuthService,
     private router: Router
   ) {
-    if (this.auth.isLoggedIn()) this.router.navigate(['/properties']);
+    if (this.auth.isLoggedIn()) this.router.navigate(['/painel']);
   }
 
   login() {
     this.error = '';
     this.loading = true;
     this.identity.login({ email: this.email, password: this.password }).subscribe({
-      next: () => this.router.navigate(['/properties']),
+      next: () => this.router.navigate(['/painel']),
       error: (err) => {
         this.loading = false;
         this.error = err.status === 401 ? 'E-mail ou senha inválidos.' : 'Erro ao entrar.';

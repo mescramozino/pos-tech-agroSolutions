@@ -28,3 +28,6 @@ jobs:
 
       - name: Test Ingestion
         run: dotnet test ingestion/Ingestion.Api.Tests/Ingestion.Api.Tests.csproj -v normal
+
+      - name: Test Analysis
+        run: dotnet test analysis/Analysis.Api.Tests/Analysis.Api.Tests.csproj -v normal

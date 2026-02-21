@@ -1,0 +1,9 @@
+<h1>Minha conta</h1>
+<div class="card" style="max-width: 480px;">
+  <div class="form-group">
+    <label>E-mail</label>
+    <p class="profile-email">{{ auth.getEmail() }}</p>
+  </div>
+  <p class="text-muted">Alteração de senha pode ser disponibilizada em versão futura.</p>
+  <a routerLink="/register" class="btn btn-secondary">Criar outro usuário</a>
+</div>

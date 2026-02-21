@@ -4,6 +4,7 @@ metadata:
   name: postgres-pvc
   namespace: agrosolutions
 spec:
+  storageClassName: ""   # usa PV estático (postgres-pv) em Docker Desktop / Kind
   accessModes: [ReadWriteOnce]
   resources:
     requests:

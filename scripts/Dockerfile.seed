@@ -3,5 +3,6 @@ FROM alpine:3.19
 RUN apk add --no-cache curl jq
 WORKDIR /app
 COPY seed-sensor-readings.sh /app/seed-sensor-readings.sh
-RUN chmod +x /app/seed-sensor-readings.sh
+# Remove CRLF (Windows) para evitar "no such file or directory" no shebang
+RUN sed -i 's/\r$//' /app/seed-sensor-readings.sh && chmod +x /app/seed-sensor-readings.sh
 ENTRYPOINT ["/app/seed-sensor-readings.sh"]

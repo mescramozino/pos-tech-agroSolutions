@@ -8,34 +8,8 @@ import { PropertiesService } from '../../services/properties.service';
   selector: 'app-alerts-list',
   standalone: true,
   imports: [RouterLink, DatePipe],
-  template: `
-    <h1>Alertas</h1>
-    @if (loading()) {
-      <p>Carregando...</p>
-    }
-    @if (error()) {
-      <p class="status-drought">{{ error() }}</p>
-    }
-    @if (!loading() && !error()) {
-      @if (alerts().length === 0) {
-        <p class="status-normal">Nenhum alerta no momento.</p>
-      }
-      @if (alerts().length > 0) {
-        @for (a of alerts(); track a.id) {
-          <div class="card">
-            <span [class]="a.type === 'Drought' ? 'status-drought' : a.type === 'Plague' ? 'status-plague' : 'status-alert'">{{ getAlertTypeLabel(a.type) }}</span>
-            <p>{{ a.message }}</p>
-            <p><small>{{ a.createdAt | date:'short' }}</small></p>
-            @if (plotName(a.plotId); as name) {
-              <a [routerLink]="['/plots', a.plotId]">Ver talhão: {{ name }}</a>
-            } @else {
-              <a [routerLink]="['/plots', a.plotId]">Ver talhão</a>
-            }
-          </div>
-        }
-      }
-    }
-  `,
+  templateUrl: './alerts-list.component.html',
+  styleUrls: ['./alerts-list.component.css'],
 })
 export class AlertsListComponent implements OnInit {
   alerts = signal<Alert[]>([]);

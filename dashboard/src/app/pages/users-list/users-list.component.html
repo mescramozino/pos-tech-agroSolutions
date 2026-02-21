@@ -1,0 +1,226 @@
+<div class="users-page">
+  <nav class="breadcrumb">
+    <a routerLink="/painel">Dashboard</a>
+    <span class="breadcrumb-sep">/</span>
+    <span class="breadcrumb-current">Usuários</span>
+  </nav>
+
+  <div class="users-header">
+    <h1 class="users-title">Gestão de Usuários</h1>
+    <button type="button" class="btn btn-primary btn-add" (click)="openCreateModal()">
+      <span class="btn-add-icon">➕</span>
+      Novo
+    </button>
+  </div>
+
+  @if (error()) {
+    <p class="users-error">{{ error() }}</p>
+  }
+
+  <div class="card card-filters">
+    <div class="filter-search-wrap">
+      <span class="filter-search-icon">🔍</span>
+      <input
+        type="text"
+        class="filter-search-input"
+        placeholder="Filtrar por e-mail"
+        [ngModel]="searchText()"
+        (ngModelChange)="setSearch($event)"
+      />
+    </div>
+    <div class="filter-row">
+      <div class="filter-group">
+        <label class="filter-label">Página</label>
+        <select
+          class="filter-select"
+          [ngModel]="page()"
+          (ngModelChange)="setPage(+$event)"
+        >
+          @for (p of pageNumbers(); track p) {
+            <option [value]="p">{{ p }}</option>
+          }
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Tamanho da Página</label>
+        <select
+          class="filter-select"
+          [ngModel]="pageSize()"
+          (ngModelChange)="pageSize.set(+$event); page.set(1)"
+        >
+          @for (size of pageSizeOptions; track size) {
+            <option [value]="size">{{ size }}</option>
+          }
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Ordenar por</label>
+        <select
+          class="filter-select"
+          [ngModel]="sortBy()"
+          (ngModelChange)="sortBy.set($event)"
+        >
+          @for (opt of sortByOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Direção</label>
+        <select
+          class="filter-select"
+          [ngModel]="sortDir()"
+          (ngModelChange)="sortDir.set($event)"
+        >
+          <option value="asc">Ascendente</option>
+          <option value="desc">Descendente</option>
+        </select>
+      </div>
+      <div class="filter-apply-wrap">
+        <button type="button" class="btn btn-primary" (click)="applyFilters()">
+          Aplicar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card card-table">
+    <table class="users-table">
+      <thead>
+        <tr>
+          <th>E-mail</th>
+          <th>Criado em</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading()) {
+          <tr>
+            <td colspan="3" class="table-loading">Carregando…</td>
+          </tr>
+        } @else if (paginated().length === 0) {
+          <tr>
+            <td colspan="3" class="table-empty">Nenhum usuário encontrado.</td>
+          </tr>
+        } @else {
+          @for (u of paginated(); track u.id) {
+            <tr>
+              <td>
+                <span class="table-link-name">{{ u.email }}</span>
+              </td>
+              <td>{{ u.createdAt | date:'dd/MM/yyyy, HH:mm' }}</td>
+              <td class="table-actions">
+                <button type="button" class="btn-action btn-edit" (click)="openEditModal(u)">
+                  <span>✏️</span> Editar
+                </button>
+                <button type="button" class="btn-action btn-delete" (click)="openDeleteModal(u)">
+                  <span>🗑️</span> Excluir
+                </button>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+
+    <div class="table-footer">
+      <span class="footer-info">
+        @if (loading()) {
+          Carregando usuários…
+        } @else {
+          {{ totalFiltered() }} usuário(s)
+        }
+      </span>
+      <div class="footer-nav">
+        <button
+          type="button"
+          class="btn btn-outline"
+          [disabled]="!canPrev()"
+          (click)="prevPage()"
+        >
+          Anterior
+        </button>
+        <button
+          type="button"
+          class="btn btn-outline"
+          [disabled]="!canNext()"
+          (click)="nextPage()"
+        >
+          Próxima
+        </button>
+      </div>
+    </div>
+  </div>
+
+  @if (formModalOpen()) {
+    <div class="modal-overlay" (click)="closeFormModal()" role="button" tabindex="0">
+      <div class="modal-panel" (click)="$event.stopPropagation()" role="dialog" aria-labelledby="form-modal-title">
+        <div class="modal-header">
+          <h2 id="form-modal-title" class="modal-title">
+            {{ editingUser() ? 'Editar Usuário' : 'Novo Usuário' }}
+          </h2>
+          <button type="button" class="modal-close" (click)="closeFormModal()" aria-label="Fechar">✖️</button>
+        </div>
+        <form (ngSubmit)="saveUser()" class="modal-body">
+          @if (formError()) {
+            <p class="form-error-inline">{{ formError() }}</p>
+          }
+          <div class="modal-form-group">
+            <label class="modal-label">E-mail *</label>
+            <input
+              type="email"
+              class="modal-input"
+              [(ngModel)]="formEmail"
+              name="formEmail"
+              placeholder="ex.: usuario@email.com"
+              required
+            />
+            <span class="modal-helper">E-mail de acesso do usuário</span>
+          </div>
+          @if (!editingUser()) {
+            <div class="modal-form-group">
+              <label class="modal-label">Senha *</label>
+              <input
+                type="password"
+                class="modal-input"
+                [(ngModel)]="formPassword"
+                name="formPassword"
+                placeholder="Senha inicial"
+                required
+              />
+              <span class="modal-helper">Senha para o primeiro acesso</span>
+            </div>
+          }
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary btn-modal-save" [disabled]="formSaving()">
+              <span>✔️</span> {{ editingUser() ? 'Salvar Alterações' : 'Salvar' }}
+            </button>
+            <button type="button" class="btn btn-modal-close" (click)="closeFormModal()">
+              <span>✖️</span> Fechar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  @if (deleteModalOpen()) {
+    <div class="modal-overlay modal-overlay-delete" (click)="closeDeleteModal()" role="button" tabindex="0">
+      <div class="modal-panel modal-panel-sm" (click)="$event.stopPropagation()" role="dialog" aria-labelledby="delete-modal-title">
+        <div class="modal-header">
+          <h2 id="delete-modal-title" class="modal-title">Confirmar Exclusão</h2>
+          <button type="button" class="modal-close" (click)="closeDeleteModal()" aria-label="Fechar">✖️</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-delete-text">Esta ação não poderá ser desfeita. Deseja realmente excluir este usuário?</p>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-danger btn-modal-delete" (click)="confirmDelete()">
+              <span>🗑️</span> Excluir
+            </button>
+            <button type="button" class="btn btn-outline" (click)="closeDeleteModal()">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

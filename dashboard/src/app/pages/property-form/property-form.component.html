@@ -1,0 +1,52 @@
+<div class="form-page">
+  <nav class="breadcrumb">
+    <a routerLink="/painel">Dashboard</a>
+    <span class="breadcrumb-sep">/</span>
+    <a routerLink="/properties">Propriedades</a>
+    <span class="breadcrumb-sep">/</span>
+    <span class="breadcrumb-current">Adicionar Nova</span>
+  </nav>
+
+  <h1 class="form-title">Adicionar Nova Propriedade</h1>
+
+  @if (error) {
+    <p class="form-error">{{ error }}</p>
+  }
+
+  <form (ngSubmit)="submit()">
+    <div class="card form-card">
+      <h2 class="form-card-title">Informações Básicas</h2>
+      <div class="form-group">
+        <label class="form-label">Nome da Propriedade *</label>
+        <input
+          type="text"
+          class="form-input"
+          [(ngModel)]="name"
+          name="name"
+          placeholder="ex.: Fazenda Vale Verde"
+          required
+        />
+        <span class="form-helper">Um nome único para esta propriedade</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Endereço Completo / Localização *</label>
+        <input
+          type="text"
+          class="form-input"
+          [(ngModel)]="location"
+          name="location"
+          placeholder="ex.: São Paulo, SP, Brasil"
+        />
+        <span class="form-helper">Cidade, estado ou endereço completo</span>
+      </div>
+    </div>
+
+    <div class="form-footer">
+      <button type="submit" class="btn btn-primary btn-save" [disabled]="loading">
+        <span class="btn-save-icon">✓</span>
+        {{ loading ? 'Salvando…' : 'Salvar Propriedade' }}
+      </button>
+      <a routerLink="/properties" class="btn btn-outline">Cancelar</a>
+    </div>
+  </form>
+</div>

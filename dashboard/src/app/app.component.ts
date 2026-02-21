@@ -1,43 +1,34 @@
 import { Component } from '@angular/core';
-import { RouterOutlet, RouterLink } from '@angular/router';
+import { Router, RouterOutlet } from '@angular/router';
 import { AuthService } from './core/auth.service';
-import { WeatherWidgetComponent } from './components/weather-widget/weather-widget.component';
+import { NavbarComponent } from './components/navbar/navbar.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, WeatherWidgetComponent],
-  template: `
-    @if (auth.isLoggedIn()) {
-      <nav>
-        <a routerLink="/properties">Propriedades</a>
-        <a routerLink="/alerts">Alertas</a>
-        <span style="margin-left: auto;">{{ auth.getEmail() }}</span>
-        <button class="btn btn-secondary" (click)="logout()">Sair</button>
-      </nav>
-    }
-    <main class="container">
-      @if (auth.isLoggedIn()) {
-        <aside class="weather-aside">
-          <app-weather-widget />
-        </aside>
-      }
-      <div class="main-content">
-        <router-outlet />
-      </div>
-    </main>
-  `,
-  styles: [`
-    .container { display: flex; gap: 1.5rem; align-items: flex-start; }
-    .weather-aside { flex-shrink: 0; }
-    .main-content { flex: 1; min-width: 0; }
-    @media (max-width: 768px) { .container { flex-direction: column; } }
-  `],
+  imports: [RouterOutlet, NavbarComponent],
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css'],
 })
 export class AppComponent {
-  constructor(public auth: AuthService) {}
-  logout() {
-    this.auth.logout();
-    window.location.href = '/login';
+  sidebarOpen = true;
+
+  constructor(
+    public auth: AuthService,
+    private router: Router,
+  ) {}
+
+  get pageTitle(): string {
+    const url = this.router.url;
+    if (url === '/painel') return 'Dashboard';
+    if (url.startsWith('/properties/new')) return 'Nova propriedade';
+    if (url.startsWith('/properties/') && url !== '/properties') return 'Propriedade';
+    if (url === '/properties') return 'Propriedades';
+    if (url.startsWith('/plots/')) return 'Talhão';
+    if (url === '/plots') return 'Talhões';
+    if (url === '/alerts') return 'Alertas';
+    if (url === '/users/me') return 'Minha conta';
+    if (url === '/register') return 'Criar usuário';
+    return 'Dashboard';
   }
 }

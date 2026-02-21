@@ -1,0 +1,31 @@
+<div class="weather-widget card">
+  <div class="weather-header">
+    <h3>Previsão do tempo</h3>
+    <div class="weather-search">
+      <input type="text" [(ngModel)]="cityInput" placeholder="Cidade (ex: São Paulo)" (keyup.enter)="search()" />
+      <button class="btn btn-primary" (click)="search()">Buscar</button>
+    </div>
+  </div>
+  @if (loading()) {
+    <p>Carregando...</p>
+  }
+  @if (error()) {
+    <p class="status-drought">{{ error() }}</p>
+  }
+  @if (forecast(); as f) {
+    <div class="weather-current">
+      <span class="weather-location">{{ f.location }}</span>
+      <span class="weather-temp">{{ f.temperatureC | number:'1.1-1' }} °C</span>
+      <span class="weather-meta">Umidade {{ f.humidityPercent }}% · Precip. {{ f.precipitationMm | number:'1.1-1' }} mm</span>
+    </div>
+    <div class="weather-daily">
+      @for (d of f.daily; track d.date) {
+        <div class="weather-day">
+          <span class="weather-date">{{ d.date | date:'dd/MM' }}</span>
+          <span class="weather-minmax">{{ d.minTempC | number:'0.0-0' }}° / {{ d.maxTempC | number:'0.0-0' }}°</span>
+          <span class="weather-precip">{{ d.precipitationMm | number:'0.1-1' }} mm</span>
+        </div>
+      }
+    </div>
+  }
+</div>

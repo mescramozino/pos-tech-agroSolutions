@@ -1,0 +1,15 @@
+# PersistentVolume para o Postgres (Docker Desktop / Kind não provisionam PVC automaticamente).
+# Permite que o postgres-pvc vincule e o pod do Postgres seja agendado.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /mnt/postgres-data
+    type: DirectoryOrCreate

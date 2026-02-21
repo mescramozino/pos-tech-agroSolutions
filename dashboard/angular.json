@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "dashboard": {
+    "frontend": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -13,7 +13,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/dashboard",
+            "outputPath": "dist/frontend",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": ["zone.js"],
@@ -38,8 +38,8 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
-            "production": { "buildTarget": { "project": "dashboard", "configuration": "production" } },
-            "development": { "buildTarget": { "project": "dashboard", "configuration": "development" } }
+            "production": { "buildTarget": { "project": "frontend", "configuration": "production" } },
+            "development": { "buildTarget": { "project": "frontend", "configuration": "development" } }
           },
           "defaultConfiguration": "development",
           "options": {

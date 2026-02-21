@@ -1,0 +1,67 @@
+<div class="toolbar">
+  <a [routerLink]="['/properties', propertyId()]" class="btn btn-secondary">← Voltar à propriedade</a>
+</div>
+@if (loading()) {
+  <p>Carregando...</p>
+}
+@if (error()) {
+  <p class="status-drought">{{ error() }}</p>
+}
+@if (plot(); as pl) {
+  <div class="card">
+    @if (editing()) {
+      <form (ngSubmit)="savePlot()">
+        <div class="form-group">
+          <label>Nome</label>
+          <input [(ngModel)]="editName" name="editName" required />
+        </div>
+        <div class="form-group">
+          <label>Cultura</label>
+          <input [(ngModel)]="editCulture" name="editCulture" required />
+        </div>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+        <button type="button" class="btn btn-secondary" (click)="cancelEdit()">Cancelar</button>
+      </form>
+    } @else {
+      <h1>{{ pl.name }}</h1>
+      <p>Cultura: {{ pl.culture }}</p>
+      @if (status(); as st) {
+        <p [class]="getStatusClass(st.status)">
+          Status: {{ getStatusLabel(st.status) }} — {{ st.message }}
+        </p>
+      }
+      <button class="btn btn-primary" (click)="startEdit(pl)">Editar talhão</button>
+    }
+  </div>
+
+  <h2>Leituras de sensores</h2>
+  @if (readings().length === 0) {
+    <p>Nenhuma leitura no período. Envie dados pela API de Ingestão.</p>
+  }
+  @if (readings().length > 0) {
+    <div class="chart-container">
+      <h3>Umidade (%)</h3>
+      <canvas baseChart
+        [data]="chartMoisture().data"
+        [options]="chartMoisture().options"
+        [type]="'line'">
+      </canvas>
+    </div>
+    <div class="chart-container">
+      <h3>Temperatura (°C)</h3>
+      <canvas baseChart
+        [data]="chartTemperature().data"
+        [options]="chartTemperature().options"
+        [type]="'line'">
+      </canvas>
+    </div>
+    <div class="chart-container">
+      <h3>Precipitação (mm)</h3>
+      <canvas baseChart
+        [data]="chartPrecipitation().data"
+        [options]="chartPrecipitation().options"
+        [type]="'line'">
+      </canvas>
+    </div>
+  }
+}

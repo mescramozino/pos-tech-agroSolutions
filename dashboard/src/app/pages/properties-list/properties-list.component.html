@@ -1,0 +1,214 @@
+<div class="props-page">
+  <nav class="breadcrumb">
+    <a routerLink="/painel">Dashboard</a>
+    <span class="breadcrumb-sep">/</span>
+    <span class="breadcrumb-current">Propriedades</span>
+  </nav>
+
+  <div class="props-header">
+    <h1 class="props-title">Gestão de Propriedades</h1>
+    <button type="button" class="btn btn-primary btn-add" (click)="openCreateModal()">
+      <span class="btn-add-icon">➕</span>
+      Novo
+    </button>
+  </div>
+
+  @if (error()) {
+    <p class="props-error">{{ error() }}</p>
+  }
+
+  <div class="card card-filters">
+    <div class="filter-search-wrap">
+      <span class="filter-search-icon">🔍</span>
+      <input
+        type="text"
+        class="filter-search-input"
+        placeholder="Filtrar por nome, cidade, estado ou país"
+        [ngModel]="searchText()"
+        (ngModelChange)="setSearch($event)"
+      />
+    </div>
+    <div class="filter-row">
+      <div class="filter-group">
+        <label class="filter-label">Página</label>
+        <select
+          class="filter-select"
+          [ngModel]="page()"
+          (ngModelChange)="setPage(+$event)"
+        >
+          @for (p of pageNumbers(); track p) {
+            <option [value]="p">{{ p }}</option>
+          }
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Tamanho da Página</label>
+        <select
+          class="filter-select"
+          [ngModel]="pageSize()"
+          (ngModelChange)="pageSize.set(+$event); page.set(1)"
+        >
+          @for (size of pageSizeOptions; track size) {
+            <option [value]="size">{{ size }}</option>
+          }
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Ordenar por</label>
+        <select
+          class="filter-select"
+          [ngModel]="sortBy()"
+          (ngModelChange)="sortBy.set($event)"
+        >
+          @for (opt of sortByOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Direção</label>
+        <select
+          class="filter-select"
+          [ngModel]="sortDir()"
+          (ngModelChange)="sortDir.set($event)"
+        >
+          <option value="asc">Ascendente</option>
+          <option value="desc">Descendente</option>
+        </select>
+      </div>
+      <div class="filter-apply-wrap">
+        <button type="button" class="btn btn-primary" (click)="applyFilters()">
+          Aplicar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card card-table">
+    <table class="props-table">
+      <thead>
+        <tr>
+          <th>Nome da Propriedade</th>
+          <th>Localização</th>
+          <th>Lotes</th>
+          <th>Criado em</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading()) {
+          <tr>
+            <td colspan="5" class="table-loading">Carregando…</td>
+          </tr>
+        } @else if (paginated().length === 0) {
+          <tr>
+            <td colspan="5" class="table-empty">Nenhuma propriedade encontrada.</td>
+          </tr>
+        } @else {
+          @for (p of paginated(); track p.id) {
+            <tr>
+              <td>
+                <a [routerLink]="['/properties', p.id]" class="table-link-name">{{ p.name }}</a>
+              </td>
+              <td>{{ p.location || '—' }}</td>
+              <td>{{ getPlotsCount(p.id) }}</td>
+              <td>{{ p.createdAt | date:'dd/MM/yyyy, HH:mm' }}</td>
+              <td class="table-actions">
+                <button type="button" class="btn-action btn-edit" (click)="openEditModal(p)">
+                  <span>✏️</span> Editar
+                </button>
+                <button type="button" class="btn-action btn-delete" (click)="openDeleteModal(p)">
+                  <span>🗑️</span> Excluir
+                </button>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+
+    <div class="table-footer">
+      <span class="footer-info">
+        @if (loading()) {
+          Carregando propriedades…
+        } @else {
+          {{ totalFiltered() }} propriedade(s)
+        }
+      </span>
+      <div class="footer-nav">
+        <button
+          type="button"
+          class="btn btn-outline"
+          [disabled]="!canPrev()"
+          (click)="prevPage()"
+        >
+          Anterior
+        </button>
+        <button
+          type="button"
+          class="btn btn-outline"
+          [disabled]="!canNext()"
+          (click)="nextPage()"
+        >
+          Próxima
+        </button>
+      </div>
+    </div>
+  </div>
+
+  @if (formModalOpen()) {
+    <div class="modal-overlay" (click)="closeFormModal()" role="button" tabindex="0">
+      <div class="modal-panel" (click)="$event.stopPropagation()" role="dialog" aria-labelledby="form-modal-title">
+        <div class="modal-header">
+          <h2 id="form-modal-title" class="modal-title">
+            {{ editingProperty() ? 'Editar Propriedade' : 'Nova Propriedade' }}
+          </h2>
+          <button type="button" class="modal-close" (click)="closeFormModal()" aria-label="Fechar">✖️</button>
+        </div>
+        <form (ngSubmit)="saveProperty()" class="modal-body">
+          @if (formError()) {
+            <p class="form-error-inline">{{ formError() }}</p>
+          }
+          <div class="modal-form-group">
+            <label class="modal-label">Nome da Propriedade *</label>
+            <input type="text" class="modal-input" [(ngModel)]="formName" name="formName" placeholder="ex.: Fazenda Vale Verde" required />
+            <span class="modal-helper">Um nome único para esta propriedade</span>
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-label">Endereço Completo / Localização *</label>
+            <input type="text" class="modal-input" [(ngModel)]="formLocation" name="formLocation" placeholder="ex.: São Paulo, SP, Brasil" />
+            <span class="modal-helper">Cidade, estado ou endereço completo</span>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary btn-modal-save" [disabled]="formSaving()">
+              <span>✔️</span> {{ editingProperty() ? 'Salvar Alterações' : 'Salvar' }}
+            </button>
+            <button type="button" class="btn btn-modal-close" (click)="closeFormModal()">
+              <span>✖️</span> Fechar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  @if (deleteModalOpen()) {
+    <div class="modal-overlay modal-overlay-delete" (click)="closeDeleteModal()" role="button" tabindex="0">
+      <div class="modal-panel modal-panel-sm" (click)="$event.stopPropagation()" role="dialog" aria-labelledby="delete-modal-title">
+        <div class="modal-header">
+          <h2 id="delete-modal-title" class="modal-title">Confirmar Exclusão</h2>
+          <button type="button" class="modal-close" (click)="closeDeleteModal()" aria-label="Fechar">✖️</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-delete-text">Esta ação não poderá ser desfeita. Deseja realmente excluir esta propriedade?</p>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-danger btn-modal-delete" (click)="confirmDelete()">
+              <span>🗑️</span> Excluir
+            </button>
+            <button type="button" class="btn btn-outline" (click)="closeDeleteModal()">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

@@ -87,7 +87,3 @@ temp/
 
 # Certificates (dev)
 *.pfx
-
-# Temporário – arquivos Markdown
-*.md
-*.pdf

@@ -1,0 +1,41 @@
+<aside class="sidebar" [class.open]="open">
+  <div class="sidebar-header">
+    <span class="sidebar-logo">🌾</span>
+    <a routerLink="/painel" class="sidebar-brand" (click)="onNavClick()">AgroSolutions</a>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <span class="nav-section-title">PRINCIPAL</span>
+      <a routerLink="/painel" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-item" (click)="onNavClick()">
+        <span class="nav-icon">📊</span><span class="nav-text">Dashboard</span>
+      </a>
+      <a routerLink="/properties" class="nav-item" [class.active]="isPropertiesPage()" (click)="onNavClick()">
+        <span class="nav-icon">🏠</span><span class="nav-text">Propriedades</span>
+      </a>
+      <a routerLink="/plots" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
+        <span class="nav-icon">🌱</span><span class="nav-text">Talhões</span>
+      </a>
+      <a routerLink="/users" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-item" (click)="onNavClick()">
+        <span class="nav-icon">👥</span><span class="nav-text">Usuários</span>
+      </a>
+      <!--<a routerLink="/users/me" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
+        <span class="nav-icon">👤</span><span class="nav-text">Minha conta</span>
+      </a>-->
+    </div>
+    <div class="nav-section">
+      <span class="nav-section-title">MONITORAMENTO</span>
+      <a routerLink="/alerts" routerLinkActive="active" class="nav-item" (click)="onNavClick()">
+        <span class="nav-icon">🔔</span><span class="nav-text">Alertas</span>
+      </a>
+    </div>
+    <div class="nav-section">
+      <span class="nav-section-title">CONTA</span>
+      <button type="button" class="nav-item nav-item-btn" (click)="logout()">
+        <span class="nav-icon">🚪</span><span class="nav-text">Sair</span>
+      </button>
+    </div>
+  </nav>
+</aside>
+@if (open) {
+  <div class="sidebar-overlay" (click)="close()" role="button" tabindex="0" aria-label="Fechar menu"></div>
+}

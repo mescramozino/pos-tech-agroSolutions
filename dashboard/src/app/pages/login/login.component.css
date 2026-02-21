@@ -1,0 +1,74 @@
+:host { width: -webkit-fill-available; }
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1e3a0f 0%, #2d5016 50%, #4a7c2c 100%);
+  padding: 20px;
+}
+.login-box {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  max-width: 400px;
+  padding: 40px;
+}
+.login-header { text-align: center; margin-bottom: 30px; }
+.login-logo { font-size: 4rem; margin-bottom: 10px; }
+.login-title { color: #2d5016; margin-bottom: 5px; font-size: 1.75rem; }
+.login-subtitle { color: #666; font-size: 0.9rem; }
+
+.form-group { margin-bottom: 20px; }
+.form-label {
+  display: block; margin-bottom: 6px; font-weight: 500; color: #333;
+}
+.form-control {
+  width: 100%; padding: 12px 16px; border: 1px solid #d4d4c8; border-radius: 8px;
+  font-size: 1rem; background: #fff;
+}
+.form-control:focus {
+  outline: none; border-color: #2d5016; box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.1);
+}
+.form-control::placeholder { color: #999; }
+.form-group-remember {
+  display: flex; align-items: center; gap: 8px;
+}
+.form-group-remember input { width: auto; }
+.form-label-remember { margin: 0; font-weight: normal; color: #666; cursor: pointer; }
+
+.error-message { margin-bottom: 20px; }
+.alert {
+  padding: 16px 20px; border-radius: 8px; display: flex; align-items: flex-start; gap: 12px;
+}
+.alert-danger {
+  background: rgba(220, 53, 69, 0.1); border-left: 4px solid #dc3545;
+}
+.alert-icon { font-size: 1.25rem; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 12px 24px; border: none; border-radius: 8px; font-size: 1rem; font-weight: 500;
+  cursor: pointer; transition: all 0.3s ease;
+}
+.btn-primary { background: #2d5016; color: white; }
+.btn-primary:hover:not(:disabled) { background: #4a7c2c; color: white; }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-block { width: 100%; }
+.btn-lg { padding: 16px 32px; font-size: 1.125rem; }
+
+.login-footer { margin-top: 24px; }
+.login-app-info {
+  margin-top: 32px; padding-top: 20px; border-top: 1px solid #d4d4c8;
+}
+.text-center { text-align: center; }
+.text-muted { color: #666; font-size: 0.85rem; }
+.text-muted a { color: #2d5016; text-decoration: none; }
+.text-muted a:hover { text-decoration: underline; }
+.tagline { color: #2d5016; font-size: 0.8rem; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in { animation: fadeIn 0.3s ease; }
