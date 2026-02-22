@@ -1,6 +1,90 @@
 # Grafana para dashboards de observabilidade.
-# Após subir: acessar pela NodePort 30300, login admin/admin (trocar no primeiro acesso).
-# Adicionar data source: URL http://prometheus:9090 (Prometheus no mesmo namespace).
+# Data source Prometheus provisionado automaticamente (sem passo manual).
+# Acessar: NodePort 30300, login admin/admin (trocar no primeiro acesso).
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: agrosolutions
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        uid: prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus:9090
+        isDefault: true
+        editable: false
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: agrosolutions
+data:
+  dashboards.yaml: |
+    apiVersion: 1
+    providers:
+      - name: AgroSolutions
+        orgId: 1
+        folder: AgroSolutions
+        type: file
+        disableDeletion: false
+        updateIntervalSeconds: 30
+        options:
+          path: /etc/grafana/provisioning/dashboards
+  apis-metrics.json: |-
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "id": null,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": { "color": { "mode": "palette-classic" }, "custom": { "axisCenteredZero": false, "axisLabel": "", "axisPlacement": "auto" }, "mappings": [], "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 80 }] }, "unit": "reqps" },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "id": 1,
+          "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true } },
+          "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "sum(rate(http_requests_received_total[5m])) by (job)", "legendFormat": "{{job}}", "refId": "A" }],
+          "title": "Request rate por API",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": {
+            "defaults": { "color": { "mode": "palette-classic" }, "mappings": [], "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 0 }] }, "unit": "short" },
+            "overrides": []
+          },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "id": 2,
+          "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false } },
+          "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "up{job=~\"identity-api|properties-api|ingestion-api|analysis-api\"}", "legendFormat": "{{job}}", "refId": "A" }],
+          "title": "APIs up (1=ok)",
+          "type": "stat"
+        }
+      ],
+      "refresh": "10s",
+      "schemaVersion": 38,
+      "style": "dark",
+      "tags": ["agrosolutions", "apis"],
+      "templating": { "list": [] },
+      "time": { "from": "now-1h", "to": "now" },
+      "title": "APIs AgroSolutions",
+      "uid": "apis-agrosolutions",
+      "version": 1,
+      "weekStart": ""
+    }
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -36,9 +120,23 @@ spec:
           volumeMounts:
             - name: storage
               mountPath: /var/lib/grafana
+            - name: datasources
+              mountPath: /etc/grafana/provisioning/datasources
+              readOnly: true
+            - name: dashboards
+              mountPath: /etc/grafana/provisioning/dashboards
+              readOnly: true
       volumes:
         - name: storage
           emptyDir: {}
+        - name: datasources
+          configMap:
+            name: grafana-datasources
+            defaultMode: 0644
+        - name: dashboards
+          configMap:
+            name: grafana-dashboards
+            defaultMode: 0644
 ---
 apiVersion: v1
 kind: Service

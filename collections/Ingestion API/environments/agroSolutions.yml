@@ -1,0 +1,4 @@
+name: agroSolutions
+variables:
+  - name: url
+    value: http://localhost:5003/
