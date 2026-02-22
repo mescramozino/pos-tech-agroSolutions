@@ -10,6 +10,13 @@ if (!string.IsNullOrWhiteSpace(rabbitHost))
     builder.Services.AddSingleton<ISensorReadingsPublisher, RabbitMqSensorReadingsPublisher>();
 else
     builder.Services.AddSingleton<ISensorReadingsPublisher, NullSensorReadingsPublisher>();
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+    });
+});
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -22,6 +29,7 @@ var app = builder.Build();
 
 app.UseSwagger();
 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Ingestion API v1"));
+app.UseCors();
 app.UseHttpMetrics();
 app.MapControllers();
 app.MapHealthChecks("/health");

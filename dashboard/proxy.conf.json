@@ -1,22 +1,8 @@
 {
-  "/api/identity": {
-    "target": "http://localhost:5001",
-    "secure": false
-  },
-  "/api/properties": {
-    "target": "http://localhost:5002",
-    "secure": false
-  },
-  "/api/plots": {
-    "target": "http://localhost:5002",
-    "secure": false
-  },
-  "/api/analysis": {
-    "target": "http://localhost:5004",
-    "secure": false
-  },
-  "/api/weather": {
-    "target": "http://localhost:5004",
-    "secure": false
-  }
+  "/api/identity": { "target": "http://localhost:5001", "secure": false },
+  "/api/properties": { "target": "http://localhost:5002", "secure": false },
+  "/api/plots": { "target": "http://localhost:5002", "secure": false },
+  "/api/ingestion": { "target": "http://localhost:5003", "secure": false },
+  "/api/analysis": { "target": "http://localhost:5004", "secure": false },
+  "/api/weather": { "target": "http://localhost:5004", "secure": false }
 }

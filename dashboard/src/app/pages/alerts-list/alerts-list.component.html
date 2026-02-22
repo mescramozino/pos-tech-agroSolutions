@@ -1,26 +1,69 @@
-<h1>Alertas</h1>
-@if (loading()) {
-  <p>Carregando...</p>
-}
-@if (error()) {
-  <p class="status-drought">{{ error() }}</p>
-}
-@if (!loading() && !error()) {
-  @if (alerts().length === 0) {
-    <p class="status-normal">Nenhum alerta no momento.</p>
+<div class="alerts-page">
+  <h1>Alertas</h1>
+
+  @if (loading()) {
+    <p class="alerts-loading">Carregando...</p>
   }
-  @if (alerts().length > 0) {
-    @for (a of alerts(); track a.id) {
-      <div class="card">
-        <span [class]="a.type === 'Drought' ? 'status-drought' : a.type === 'Plague' ? 'status-plague' : 'status-alert'">{{ getAlertTypeLabel(a.type) }}</span>
-        <p>{{ a.message }}</p>
-        <p><small>{{ a.createdAt | date:'dd/MM/yyyy, HH:mm' }}</small></p>
-        @if (plotName(a.plotId); as name) {
-          <a [routerLink]="['/plots', a.plotId]">Ver talhão: {{ name }}</a>
-        } @else {
-          <a [routerLink]="['/plots', a.plotId]">Ver talhão</a>
+  @if (error()) {
+    <p class="alerts-error">{{ error() }}</p>
+  }
+  @if (!loading() && !error()) {
+    @if (alerts().length === 0) {
+      <p class="alerts-empty">Nenhum alerta no momento.</p>
+    }
+    @if (alerts().length > 0) {
+      <div class="alerts-list">
+        @for (a of alerts(); track a.id) {
+          <article class="alert-card" [class.alert-card--critical]="getSeverity(a.type) === 'critical'" [class.alert-card--warning]="getSeverity(a.type) === 'warning'" [class.alert-card--info]="getSeverity(a.type) === 'info'">
+            <div class="alert-card__header">
+              <span class="alert-card__icon" aria-hidden="true">🔔</span>
+              <span class="alert-card__pill" [class.alert-card__pill--critical]="getSeverity(a.type) === 'critical'" [class.alert-card__pill--warning]="getSeverity(a.type) === 'warning'" [class.alert-card__pill--info]="getSeverity(a.type) === 'info'">
+                {{ getAlertTypeLabel(a.type) }}
+              </span>
+            </div>
+            <div class="alert-card__title-row">
+              <h2 class="alert-card__title">{{ getAlertTitle(a.type, a.plotId) }}</h2>
+              <span class="alert-card__time">{{ timeAgo(a.createdAt) }}</span>
+            </div>
+            <p class="alert-card__description">{{ a.message }}</p>
+            <div class="alert-card__tags">
+              @if (plotName(a.plotId); as plot) {
+                <span class="alert-card__tag alert-card__tag--plot">
+                  <span class="alert-card__tag-icon" aria-hidden="true">📍</span>
+                  {{ plot }}
+                </span>
+              }
+              @if (propertyName(a.plotId); as prop) {
+                <span class="alert-card__tag alert-card__tag--property">
+                  <span class="alert-card__tag-icon" aria-hidden="true">🏞️</span>
+                  {{ prop }}
+                </span>
+              }
+              @if (culture(a.plotId); as cult) {
+                <span class="alert-card__tag alert-card__tag--crop">
+                  <span class="alert-card__tag-icon" aria-hidden="true">🌱</span>
+                  {{ cult }}
+                </span>
+              }
+            </div>
+            <div class="alert-card__actions">
+              <button type="button" class="alert-card__btn alert-card__btn--resolve" (click)="resolveAlert(a)">
+                <span aria-hidden="true">✓</span> Resolver
+              </button>
+              @if (a.plotId) {
+                <a [routerLink]="['/plots', a.plotId]" class="alert-card__btn alert-card__btn--outline">
+                  <span aria-hidden="true">🌱</span> Ver talhão
+                </a>
+                @if (plotInfo()[a.plotId]; as info) {
+                  <a [routerLink]="['/properties', info.propertyId]" class="alert-card__btn alert-card__btn--outline">
+                    <span aria-hidden="true">🏞️</span> Ver propriedade
+                  </a>
+                }
+              }
+            </div>
+          </article>
         }
       </div>
     }
   }
-}
+</div>

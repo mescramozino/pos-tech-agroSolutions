@@ -58,6 +58,13 @@ builder.Services.AddAuthorization(options =>
         policy.Requirements.Add(new Properties.Api.Authorization.ProducerIdOrJwtRequirement()));
 });
 builder.Services.AddSingleton<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, Properties.Api.Authorization.ProducerIdOrJwtHandler>();
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+    });
+});
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -74,7 +81,7 @@ await EnsureDatabaseAsync(app);
 
 app.UseSwagger();
 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Properties API v1"));
-
+app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseHttpMetrics();

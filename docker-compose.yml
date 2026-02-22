@@ -4,7 +4,7 @@
 
 services:
   rabbitmq:
-    image: rabbitmq:3-management-alpine
+    image: rabbitmq:3.13-management-alpine
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -12,14 +12,15 @@ services:
       RABBITMQ_DEFAULT_USER: agro
       RABBITMQ_DEFAULT_PASS: secret
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      # Garante que o AMQP (5672) e o broker estão prontos antes de marcar healthy (evita "Connection refused" na analysis-api)
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping && rabbitmq-diagnostics -q check_port_connectivity || exit 1"]
       interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 15s
+      timeout: 10s
+      retries: 6
+      start_period: 30s
 
   postgres:
-    image: postgres:16-alpine
+    image: postgres:16.12-alpine
     environment:
       POSTGRES_USER: agro
       POSTGRES_PASSWORD: secret
