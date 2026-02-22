@@ -1,0 +1,43 @@
+info:
+  name: Cenário de risco de alagamento (umidade muito alta)
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: http://localhost:5003/api/Ingestion/sensors
+  body:
+    type: json
+    data: |-
+      {
+        "plotId": "c991f6b6-47a3-45fe-8431-302db97e15ec",
+        "readings": [
+          {
+            "type": "moisture",
+            "value": 92.0,
+            "timestamp": "2025-02-20T00:00:00Z"
+          },
+          {
+            "type": "moisture",
+            "value": 94.0,
+            "timestamp": "2025-02-20T06:00:00Z"
+          },
+          {
+            "type": "moisture",
+            "value": 91.0,
+            "timestamp": "2025-02-20T12:00:00Z"
+          },
+          {
+            "type": "moisture",
+            "value": 93.0,
+            "timestamp": "2025-02-20T18:00:00Z"
+          }
+        ]
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -81,11 +81,20 @@ public class SensorReadingsConsumer : BackgroundService
         await store.WriteAsync(msg.PlotId, type, msg.Value, msg.Timestamp);
 
         if (string.Equals(type, "moisture", StringComparison.OrdinalIgnoreCase))
+        {
             await EvaluateDroughtRuleAsync(store, db, msg.PlotId, msg.Timestamp, msg.Value);
+            await EvaluateFloodRuleAsync(store, db, msg.PlotId, msg.Timestamp);
+        }
 
         if (string.Equals(type, "moisture", StringComparison.OrdinalIgnoreCase) ||
             string.Equals(type, "temperature", StringComparison.OrdinalIgnoreCase))
+        {
             await EvaluatePlagueRuleAsync(store, db, msg.PlotId, msg.Timestamp);
+            await EvaluateInfoRuleAsync(store, db, msg.PlotId, msg.Timestamp);
+        }
+
+        if (string.Equals(type, "temperature", StringComparison.OrdinalIgnoreCase))
+            await EvaluateFrostRuleAsync(store, db, msg.PlotId, msg.Timestamp, msg.Value);
     }
 
     private static async Task EvaluateDroughtRuleAsync(ISensorReadingsTimeSeriesStore store, AnalysisDbContext db, Guid plotId, DateTime asOf, double currentMoisture)
@@ -139,6 +148,91 @@ public class SensorReadingsConsumer : BackgroundService
             PlotId = plotId,
             Type = "Plague",
             Message = "Risco de Praga: umidade e temperatura elevadas nas últimas 24h favorecem pragas e fungos.",
+            CreatedAt = DateTime.UtcNow
+        });
+        await db.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Alerta de Geada (Frost): temperatura mínima &lt; 2 °C nas últimas 24h no talhão.
+    /// </summary>
+    private static async Task EvaluateFrostRuleAsync(ISensorReadingsTimeSeriesStore store, AnalysisDbContext db, Guid plotId, DateTime asOf, double currentTemp)
+    {
+        var windowStart = asOf.AddHours(-24);
+        var tempReadings = await store.GetReadingsAsync(plotId, windowStart, asOf, "temperature");
+        var values = tempReadings.Select(r => r.Value).ToList();
+        if (currentTemp < 2) values.Add(currentTemp);
+
+        if (values.Count == 0) return;
+        var minTemp = values.Min();
+        if (minTemp >= 2) return;
+
+        var alreadyAlerted = await db.Alerts.AnyAsync(a =>
+            a.PlotId == plotId && a.Type == "Frost" && a.CreatedAt >= windowStart);
+        if (alreadyAlerted) return;
+
+        db.Alerts.Add(new Alert
+        {
+            Id = Guid.NewGuid(),
+            PlotId = plotId,
+            Type = "Frost",
+            Message = "Alerta de Geada: temperatura mínima abaixo de 2°C nas últimas 24h. Proteja as culturas sensíveis.",
+            CreatedAt = DateTime.UtcNow
+        });
+        await db.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Risco de Alagamento (Flood): umidade média &gt; 90% nas últimas 24h no talhão.
+    /// </summary>
+    private static async Task EvaluateFloodRuleAsync(ISensorReadingsTimeSeriesStore store, AnalysisDbContext db, Guid plotId, DateTime asOf)
+    {
+        var windowStart = asOf.AddHours(-24);
+        var moistureReadings = await store.GetReadingsAsync(plotId, windowStart, asOf, "moisture");
+        if (moistureReadings.Count == 0) return;
+
+        var avgMoisture = moistureReadings.Average(r => r.Value);
+        if (avgMoisture <= 90) return;
+
+        var alreadyAlerted = await db.Alerts.AnyAsync(a =>
+            a.PlotId == plotId && a.Type == "Flood" && a.CreatedAt >= windowStart);
+        if (alreadyAlerted) return;
+
+        db.Alerts.Add(new Alert
+        {
+            Id = Guid.NewGuid(),
+            PlotId = plotId,
+            Type = "Flood",
+            Message = "Risco de Alagamento: umidade do solo acima de 90% nas últimas 24h. Verificar drenagem do talhão.",
+            CreatedAt = DateTime.UtcNow
+        });
+        await db.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Informativo (Info): condições favoráveis – umidade entre 45% e 65% e temperatura entre 20°C e 26°C (médias nas últimas 24h).
+    /// </summary>
+    private static async Task EvaluateInfoRuleAsync(ISensorReadingsTimeSeriesStore store, AnalysisDbContext db, Guid plotId, DateTime asOf)
+    {
+        var windowStart = asOf.AddHours(-24);
+        var moistureReadings = await store.GetReadingsAsync(plotId, windowStart, asOf, "moisture");
+        var tempReadings = await store.GetReadingsAsync(plotId, windowStart, asOf, "temperature");
+        if (moistureReadings.Count == 0 || tempReadings.Count == 0) return;
+
+        var avgMoisture = moistureReadings.Average(r => r.Value);
+        var avgTemp = tempReadings.Average(r => r.Value);
+        if (avgMoisture < 45 || avgMoisture > 65 || avgTemp < 20 || avgTemp > 26) return;
+
+        var alreadyAlerted = await db.Alerts.AnyAsync(a =>
+            a.PlotId == plotId && a.Type == "Info" && a.CreatedAt >= windowStart);
+        if (alreadyAlerted) return;
+
+        db.Alerts.Add(new Alert
+        {
+            Id = Guid.NewGuid(),
+            PlotId = plotId,
+            Type = "Info",
+            Message = "Condições favoráveis: umidade e temperatura nas faixas ideais nas últimas 24h.",
             CreatedAt = DateTime.UtcNow
         });
         await db.SaveChangesAsync();

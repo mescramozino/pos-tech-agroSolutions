@@ -125,8 +125,4 @@ export class AlertsListComponent implements OnInit {
     if (diffH < 24) return `Há ${diffH} hora${diffH !== 1 ? 's' : ''}`;
     return `Há ${diffD} dia${diffD !== 1 ? 's' : ''}`;
   }
-
-  resolveAlert(alert: Alert) {
-    this.alerts.update((list) => list.filter((a) => a.id !== alert.id));
-  }
 }
