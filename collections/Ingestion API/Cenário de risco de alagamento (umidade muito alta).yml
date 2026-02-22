@@ -10,7 +10,7 @@ http:
     type: json
     data: |-
       {
-        "plotId": "c991f6b6-47a3-45fe-8431-302db97e15ec",
+        "plotId": "202931e3-7c62-48f0-952f-c1e501d6ff19",
         "readings": [
           {
             "type": "moisture",
