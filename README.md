@@ -216,5 +216,3 @@ O pipeline no GitHub Actions executa build e esses testes em cada push.
 
 - **Concluído:** Arquitetura em microsserviços, quatro APIs (Identity, Properties, Ingestion, Analysis), RabbitMQ, leituras em PostgreSQL, dashboard Angular (gráficos, alertas, previsão do tempo), motor de alertas (seca e praga). Kubernetes (manifests em `k8s/`), Prometheus e Grafana, CI e CD no GitHub Actions (build, testes, push GHCR, deploy em Kind).
 - **Pendente para entrega do hackathon:** Vídeo de demonstração (máx. 15 min) e link do repositório público.
-
-Documentação de planejamento e análises de gap está em [apoio-desenvolvimento/](apoio-desenvolvimento/).
