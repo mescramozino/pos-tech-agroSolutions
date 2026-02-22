@@ -1,0 +1,6 @@
+name: agroSolutions
+variables:
+  - name: url
+    value: http://localhost:30003
+  - name: plotId
+    value: ""

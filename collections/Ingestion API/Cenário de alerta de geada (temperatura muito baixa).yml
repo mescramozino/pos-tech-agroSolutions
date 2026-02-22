@@ -5,12 +5,12 @@ info:
 
 http:
   method: POST
-  url: http://localhost:5003/api/Ingestion/sensors
+  url: "{{url}}/api/Ingestion/sensors"
   body:
     type: json
     data: |-
       {
-        "plotId": "ed4827df-89f7-4657-96b4-c53dd9a32f09",
+        "plotId": "02c2f2dc-4fee-420e-9dcc-eb4d16da3daf",
         "readings": [
           {
             "type": "temperature",
