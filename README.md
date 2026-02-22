@@ -6,8 +6,9 @@ MVP de agricultura de precisão: autenticação, cadastro de propriedades e talh
 
 - [Arquitetura](docs/arquitetura.md)
 - [Contratos de API e eventos](docs/contratos.md)
-- [Passo a passo: Git, Docker e execução](docs/PASSO_A_PASSO_GIT_E_DOCKER.md)
 - [Passo a passo: CD (build, push GHCR, deploy K8s)](docs/PASSO_A_PASSO_CD.md)
+- [Infraestrutura Kubernetes](docs/INFRAESTRUTURA_K8S.md) e [k8s/README.md](k8s/README.md)
+- [Links e acessos K8s (URLs, credenciais, DBeaver, métricas)](docs/LINKS_E_ACESSOS_K8S.md)
 - [Scripts (criar repositório no GitHub)](scripts/README.md)
 
 ## Estrutura do repositório
@@ -18,10 +19,10 @@ properties/   → Serviço de Propriedades e Talhões (CRUD)
 ingestion/    → Serviço de Ingestão de dados de sensores (publica em RabbitMQ)
 analysis/     → Serviço de Análise e Alertas (consome fila, PostgreSQL para leituras, regra de seca, API de previsão)
 dashboard/    → Frontend Angular (login, propriedades, talhões, gráficos, alertas, previsão do tempo)
-docs/         → Diagramas, contratos e passo a passo
+docs/         → Diagramas, contratos, passo a passo e links de acessos K8s
 k8s/          → Manifests Kubernetes (APIs, Postgres, RabbitMQ, Prometheus, Grafana, Ingress)
 scripts/      → Seed de sensores (Docker), criação de bancos; ver scripts/README.md
-apoio-desenvolvimento/ → Documentos e scripts de apoio (planejamento, análises, k8s local, etc.)
+collections/  → Coleções para Postman/Insomnia (APIs)
 ```
 
 ## Stack
@@ -34,8 +35,9 @@ apoio-desenvolvimento/ → Documentos e scripts de apoio (planejamento, análise
 | Mensageria    | RabbitMQ (fila `sensor.readings`) |
 | Previsão do tempo | Open-Meteo (API pública) |
 | Infra local   | Docker Compose (Postgres, RabbitMQ, 4 APIs, dashboard) |
+| Observabilidade | Prometheus (scrape das APIs em `/metrics`), Grafana (datasource e dashboard provisionados) |
 
-CI no GitHub Actions (build + testes). Kubernetes e CD pendentes.
+CI/CD no GitHub Actions (build, testes, push para GHCR, deploy em Kubernetes). Manifests em `k8s/`.
 
 ## Pré-requisitos
 
@@ -88,8 +90,6 @@ docker-compose run --rm seed-sensor-readings
    ```
 
 6. Rode o dashboard: `cd dashboard && npm install && npm start` e acesse http://localhost:4200.
-
-Detalhes em [Passo a passo: Git, Docker e execução](docs/PASSO_A_PASSO_GIT_E_DOCKER.md).
 
 ### Como executar as migrations (criar tabelas e dados iniciais)
 
@@ -191,15 +191,13 @@ npm install
 npm start
 ```
 
-Acesse http://localhost:4200. O proxy (`proxy.conf.json`) redireciona `/api/identity`, `/api/properties`, `/api/plots`, `/api/analysis` e `/api/weather` para as portas corretas (5001, 5002, 5004).
+Acesse http://localhost:4200. O proxy (`proxy.conf.json`) redireciona `/api/identity`, `/api/properties`, `/api/plots`, `/api/ingestion`, `/api/analysis` e `/api/weather` para as portas corretas (5001, 5002, 5003, 5004).
 
 ## Rodar as APIs localmente (sem Docker)
 
 1. Subir **PostgreSQL** (ou usar o do Docker na porta 5432) e **RabbitMQ** (5672).
 2. Criar os bancos: `identity_db`, `properties_db`, `analysis_db` (script em `docker/postgres/init-multiple-databases.sh`).
 3. Em cada pasta de serviço (`identity`, `properties`, `ingestion`, `analysis`), configurar `appsettings.Development.json` (connection strings, RabbitMQ) e executar `dotnet run` no projeto `.Api`.
-
-Detalhes no [passo a passo](docs/PASSO_A_PASSO_GIT_E_DOCKER.md).
 
 ## Testes e CI
 
@@ -211,10 +209,3 @@ dotnet test ingestion/Ingestion.Api.Tests/Ingestion.Api.Tests.csproj
 ```
 
 O pipeline no GitHub Actions executa build e esses testes em cada push.
-
-## Status do projeto
-
-- **Concluído:** Arquitetura em microsserviços, quatro APIs (Identity, Properties, Ingestion, Analysis), RabbitMQ, leituras em PostgreSQL, dashboard Angular (gráficos, alertas, previsão do tempo), motor de alertas (seca e praga). Kubernetes (manifests em `k8s/`), Prometheus e Grafana, CI e CD no GitHub Actions (build, testes, push GHCR, deploy em Kind).
-- **Pendente para entrega do hackathon:** Vídeo de demonstração (máx. 15 min) e link do repositório público.
-
-Documentação de planejamento e análises de gap está em [apoio-desenvolvimento/](apoio-desenvolvimento/).
