@@ -1,1 +1,195 @@
-/* Estilos do alerts-list (globais em styles.css) */
+.alerts-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem 0;
+}
+
+.alerts-page h1 {
+  margin: 0 0 1.25rem 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.alerts-loading,
+.alerts-empty {
+  color: #666;
+  margin: 0;
+}
+
+.alerts-error {
+  color: #c62828;
+  margin: 0;
+}
+
+.alerts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.alert-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 1.25rem 1.5rem;
+  border-left-width: 4px;
+  border-left-style: solid;
+}
+
+.alert-card--critical {
+  border-left-color: #c62828;
+}
+
+.alert-card--warning {
+  border-left-color: #f9a825;
+}
+
+.alert-card--info {
+  border-left-color: #1565c0;
+}
+
+.alert-card__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.alert-card__icon {
+  font-size: 1.1rem;
+}
+
+.alert-card__pill {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.alert-card__pill--critical {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.alert-card__pill--warning {
+  background: #fff8e1;
+  color: #f57f17;
+}
+
+.alert-card__pill--info {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.alert-card__title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.alert-card__title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  flex: 1;
+  min-width: 0;
+}
+
+.alert-card__time {
+  flex-shrink: 0;
+  font-size: 0.8125rem;
+  color: #757575;
+}
+
+.alert-card__description {
+  margin: 0 0 1rem 0;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: #424242;
+}
+
+.alert-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.alert-card__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  background: #f5f5f5;
+  color: #424242;
+}
+
+.alert-card__tag--plot {
+  background: #ffebee;
+  color: #b71c1c;
+}
+
+.alert-card__tag--property {
+  background: #e8f5e9;
+  color: #1b5e20;
+}
+
+.alert-card__tag--crop {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.alert-card__tag-icon {
+  font-size: 0.9rem;
+}
+
+.alert-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.alert-card__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  border: none;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.alert-card__btn:hover {
+  opacity: 0.9;
+}
+
+.alert-card__btn--resolve {
+  background: #e0e0e0;
+  color: #424242;
+}
+
+.alert-card__btn--resolve:hover {
+  background: #bdbdbd;
+}
+
+.alert-card__btn--outline {
+  background: #fff;
+  color: #2e7d32;
+  border: 1px solid #2e7d32;
+}
+
+.alert-card__btn--outline:hover {
+  background: #e8f5e9;
+}

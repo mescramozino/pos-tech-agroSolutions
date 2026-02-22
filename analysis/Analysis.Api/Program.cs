@@ -16,6 +16,13 @@ builder.Services.AddScoped<ISensorReadingsTimeSeriesStore, PostgresSensorReading
 
 builder.Services.AddHttpClient();
 builder.Services.AddHostedService<SensorReadingsConsumer>();
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+    });
+});
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -32,6 +39,7 @@ await SeedAlertsAndReadingsAsync(app);
 
 app.UseSwagger();
 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Analysis API v1"));
+app.UseCors();
 app.UseHttpMetrics();
 app.MapControllers();
 app.MapHealthChecks("/health");
@@ -209,22 +217,25 @@ public partial class Program
             });
         }
 
-        db.Alerts.Add(new Alert
+        var alertMessages = new[]
         {
-            Id = Guid.NewGuid(),
-            PlotId = SeededPlotId,
-            Type = "Drought",
-            Message = "Alerta de Seca: umidade abaixo de 30% por mais de 24h.",
-            CreatedAt = now.AddDays(-2)
-        });
-        db.Alerts.Add(new Alert
+            (Type: "Drought", Message: "Alerta de Seca: umidade do solo abaixo de 30% por mais de 24 horas. Leitura atual: 22%. Cultura em risco.", DaysAgo: 2),
+            (Type: "Plague", Message: "Risco de Praga: umidade e temperatura elevadas favorecem pragas e fungos. Recomenda-se monitorar e aplicar defensivos.", DaysAgo: 1),
+            (Type: "Info", Message: "Dados iniciais de demonstração. Execute o seed de leituras para mais dados.", DaysAgo: 0),
+            (Type: "Frost", Message: "Alerta de Geada: previsão de temperatura mínima próxima a 0°C nas próximas 48h. Proteja as culturas sensíveis.", DaysAgo: 3),
+            (Type: "Flood", Message: "Risco de Alagamento: precipitação acumulada alta e umidade do solo elevada. Verificar drenagem do talhão.", DaysAgo: 4)
+        };
+        foreach (var a in alertMessages)
         {
-            Id = Guid.NewGuid(),
-            PlotId = SeededPlotId,
-            Type = "Info",
-            Message = "Dados iniciais de demonstração. Execute o seed de leituras para mais dados.",
-            CreatedAt = now
-        });
+            db.Alerts.Add(new Alert
+            {
+                Id = Guid.NewGuid(),
+                PlotId = SeededPlotId,
+                Type = a.Type,
+                Message = a.Message,
+                CreatedAt = now.AddDays(-a.DaysAgo)
+            });
+        }
 
         await db.SaveChangesAsync();
     }
