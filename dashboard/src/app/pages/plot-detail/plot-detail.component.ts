@@ -78,12 +78,16 @@ export class PlotDetailComponent implements OnInit {
   getStatusClass(status: string): string {
     if (status === 'DroughtAlert') return 'status-drought';
     if (status === 'PlagueRisk') return 'status-plague';
+    if (status === 'FrostRisk') return 'status-plague';
+    if (status === 'FloodRisk') return 'status-drought';
     return 'status-normal';
   }
 
   getStatusLabel(status: string): string {
     if (status === 'DroughtAlert') return 'Alerta de Seca';
     if (status === 'PlagueRisk') return 'Risco de Praga';
+    if (status === 'FrostRisk') return 'Alerta de Geada';
+    if (status === 'FloodRisk') return 'Risco de Alagamento';
     return status;
   }
 

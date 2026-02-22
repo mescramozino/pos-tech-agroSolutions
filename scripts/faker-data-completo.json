@@ -1,0 +1,91 @@
+{
+  "description": "Dados faker completos para Cadastro de Propriedade, Talhões e Sensores. Os payloads de sensores geram alertas Drought e Plague via regras da Analysis API. Frost/Flood são exemplos para regras futuras.",
+  "usage": "Dados para aplicação manual no vídeo de demonstração: cadastrar propriedades e talhões pelo dashboard (ou API), depois enviar os sensorPayloads via POST /api/ingestion/sensors substituindo plotRef pelo ID real do talhão.",
+  "identity": {
+    "email": "produtor@agro.local",
+    "password": "Senha123!"
+  },
+  "properties": [
+    { "name": "Fazenda Vale Verde", "location": "Região Sul" },
+    { "name": "Sítio Planalto", "location": "Região Centro-Oeste" }
+  ],
+  "plots": [
+    { "propertyName": "Fazenda Vale Verde", "name": "Talhão Seca", "culture": "Soja" },
+    { "propertyName": "Fazenda Vale Verde", "name": "Talhão Praga", "culture": "Milho" },
+    { "propertyName": "Fazenda Vale Verde", "name": "Talhão Normal", "culture": "Soja" },
+    { "propertyName": "Sítio Planalto", "name": "Talhão Geada", "culture": "Café" },
+    { "propertyName": "Sítio Planalto", "name": "Talhão Alagado", "culture": "Arroz" }
+  ],
+  "sensorPayloads": {
+    "Drought": {
+      "objetivo": "Gera alerta de Seca (Drought): umidade < 30% por 24h no mesmo talhão.",
+      "plotRef": "Talhão Seca",
+      "readings": [
+        { "type": "moisture", "value": 22, "timestamp": "2025-02-20T00:00:00Z" },
+        { "type": "moisture", "value": 25, "timestamp": "2025-02-20T02:00:00Z" },
+        { "type": "moisture", "value": 28, "timestamp": "2025-02-20T04:00:00Z" },
+        { "type": "moisture", "value": 24, "timestamp": "2025-02-20T06:00:00Z" },
+        { "type": "moisture", "value": 26, "timestamp": "2025-02-20T08:00:00Z" },
+        { "type": "moisture", "value": 23, "timestamp": "2025-02-20T10:00:00Z" },
+        { "type": "moisture", "value": 27, "timestamp": "2025-02-20T12:00:00Z" },
+        { "type": "moisture", "value": 25, "timestamp": "2025-02-20T14:00:00Z" },
+        { "type": "moisture", "value": 29, "timestamp": "2025-02-20T16:00:00Z" },
+        { "type": "moisture", "value": 26, "timestamp": "2025-02-20T18:00:00Z" },
+        { "type": "moisture", "value": 24, "timestamp": "2025-02-20T20:00:00Z" },
+        { "type": "moisture", "value": 28, "timestamp": "2025-02-20T22:00:00Z" },
+        { "type": "moisture", "value": 25, "timestamp": "2025-02-21T00:00:00Z" }
+      ]
+    },
+    "Plague": {
+      "objetivo": "Gera alerta de Praga (Plague): média umidade > 75% e média temperatura > 26°C nas últimas 24h.",
+      "plotRef": "Talhão Praga",
+      "readings": [
+        { "type": "moisture", "value": 78, "timestamp": "2025-02-20T00:00:00Z" },
+        { "type": "temperature", "value": 27.5, "timestamp": "2025-02-20T00:00:00Z" },
+        { "type": "moisture", "value": 76, "timestamp": "2025-02-20T04:00:00Z" },
+        { "type": "temperature", "value": 28, "timestamp": "2025-02-20T04:00:00Z" },
+        { "type": "moisture", "value": 80, "timestamp": "2025-02-20T08:00:00Z" },
+        { "type": "temperature", "value": 27, "timestamp": "2025-02-20T08:00:00Z" },
+        { "type": "moisture", "value": 77, "timestamp": "2025-02-20T12:00:00Z" },
+        { "type": "temperature", "value": 29, "timestamp": "2025-02-20T12:00:00Z" },
+        { "type": "moisture", "value": 79, "timestamp": "2025-02-20T16:00:00Z" },
+        { "type": "temperature", "value": 28.5, "timestamp": "2025-02-20T16:00:00Z" },
+        { "type": "moisture", "value": 78, "timestamp": "2025-02-20T20:00:00Z" },
+        { "type": "temperature", "value": 27, "timestamp": "2025-02-20T20:00:00Z" },
+        { "type": "moisture", "value": 77, "timestamp": "2025-02-21T00:00:00Z" },
+        { "type": "temperature", "value": 28, "timestamp": "2025-02-21T00:00:00Z" }
+      ]
+    },
+    "Normal": {
+      "objetivo": "Leituras normais (sem disparar alerta).",
+      "plotRef": "Talhão Normal",
+      "readings": [
+        { "type": "moisture", "value": 55, "timestamp": "2025-02-20T12:00:00Z" },
+        { "type": "temperature", "value": 24, "timestamp": "2025-02-20T12:00:00Z" }
+      ]
+    },
+    "Frost_exemplo": {
+      "objetivo": "Exemplo para regra futura de Geada (Frost): temperatura muito baixa. Hoje a Analysis não gera Frost por sensores.",
+      "plotRef": "Talhão Geada",
+      "readings": [
+        { "type": "temperature", "value": 1.5, "timestamp": "2025-02-20T06:00:00Z" },
+        { "type": "temperature", "value": 0.5, "timestamp": "2025-02-20T07:00:00Z" }
+      ]
+    },
+    "Flood_exemplo": {
+      "objetivo": "Exemplo para regra futura de Alagamento (Flood): umidade e precipitação altas. Hoje a Analysis não gera Flood por sensores.",
+      "plotRef": "Talhão Alagado",
+      "readings": [
+        { "type": "moisture", "value": 95, "timestamp": "2025-02-20T12:00:00Z" },
+        { "type": "precipitation", "value": 80, "timestamp": "2025-02-20T12:00:00Z" }
+      ]
+    }
+  },
+  "alertasGeradosPorSensores": [
+    "Drought – regra: todas as leituras de moisture nas últimas 24h < 30%",
+    "Plague – regra: média moisture > 75% e média temperature > 26°C nas últimas 24h"
+  ],
+  "alertasApenasNoSeed": [
+    "Info, Frost, Flood – inseridos pelo seed da Analysis API quando o banco está vazio; sensores acima são exemplos para regras futuras."
+  ]
+}

@@ -1,0 +1,83 @@
+info:
+  name: Vários dias (simulação histórica) – umidade e temperatura
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: http://localhost:5003/api/Ingestion/sensors
+  body:
+    type: json
+    data: |-
+      {
+        "plotId": "af11a89c-6a16-49b9-8df1-c1e5d686500d",
+        "readings": [
+          {
+            "type": "moisture",
+            "value": 35.0,
+            "timestamp": "2025-02-15T08:00:00Z"
+          },
+          {
+            "type": "temperature",
+            "value": 26.0,
+            "timestamp": "2025-02-15T08:00:00Z"
+          },
+          {
+            "type": "moisture",
+            "value": 28.5,
+            "timestamp": "2025-02-16T08:00:00Z"
+          },
+          {
+            "type": "temperature",
+            "value": 27.5,
+            "timestamp": "2025-02-16T08:00:00Z"
+          },
+          {
+            "type": "moisture",
+            "value": 25.0,
+            "timestamp": "2025-02-17T08:00:00Z"
+          },
+          {
+            "type": "temperature",
+            "value": 29.0,
+            "timestamp": "2025-02-17T08:00:00Z"
+          },
+          {
+            "type": "moisture",
+            "value": 22.0,
+            "timestamp": "2025-02-18T08:00:00Z"
+          },
+          {
+            "type": "temperature",
+            "value": 30.5,
+            "timestamp": "2025-02-18T08:00:00Z"
+          },
+          {
+            "type": "moisture",
+            "value": 45.0,
+            "timestamp": "2025-02-19T08:00:00Z"
+          },
+          {
+            "type": "temperature",
+            "value": 23.0,
+            "timestamp": "2025-02-19T08:00:00Z"
+          },
+          {
+            "type": "moisture",
+            "value": 52.0,
+            "timestamp": "2025-02-20T08:00:00Z"
+          },
+          {
+            "type": "temperature",
+            "value": 21.5,
+            "timestamp": "2025-02-20T08:00:00Z"
+          }
+        ]
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

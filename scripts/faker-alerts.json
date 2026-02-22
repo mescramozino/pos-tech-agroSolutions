@@ -1,0 +1,32 @@
+{
+  "description": "Dados faker de alertas para demonstração. plotId usa o talhão seedado (Talhão Norte). Tipos: Drought, Plague, Info, Frost, Flood.",
+  "plotId": "B2000000-2000-2000-2000-000000000001",
+  "alerts": [
+    {
+      "type": "Drought",
+      "message": "Alerta de Seca: umidade do solo abaixo de 30% por mais de 24 horas. Leitura atual: 22%. Cultura em risco.",
+      "severity": "critical"
+    },
+    {
+      "type": "Plague",
+      "message": "Risco de Praga: umidade e temperatura elevadas favorecem pragas e fungos. Recomenda-se monitorar e aplicar defensivos conforme necessidade.",
+      "severity": "warning"
+    },
+    {
+      "type": "Info",
+      "message": "Dados iniciais de demonstração. Execute o seed de leituras para mais dados.",
+      "severity": "info"
+    },
+    {
+      "type": "Frost",
+      "message": "Alerta de Geada: previsão de temperatura mínima próxima a 0°C nas próximas 48h. Proteja as culturas sensíveis.",
+      "severity": "warning"
+    },
+    {
+      "type": "Flood",
+      "message": "Risco de Alagamento: precipitação acumulada alta e umidade do solo elevada. Verificar drenagem do talhão.",
+      "severity": "critical"
+    }
+  ],
+  "usage": "O seed da Analysis API (Program.cs SeedAlertsAndReadingsAsync) insere alertas quando o banco está vazio. Este JSON serve de referência dos tipos e mensagens. Para inserir manualmente, use os tipos e mensagens acima com o plotId indicado."
+}

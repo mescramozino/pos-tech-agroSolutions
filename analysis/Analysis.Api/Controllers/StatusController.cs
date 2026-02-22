@@ -32,6 +32,18 @@ public class StatusController : ControllerBase
         {
             return Ok(new PlotStatusDto(plotId, "PlagueRisk", "Risco de Praga: umidade e temperatura elevadas favorecem pragas e fungos."));
         }
+        var recentFrost = await _db.Alerts
+            .AnyAsync(a => a.PlotId == plotId && a.Type == "Frost" && a.CreatedAt >= windowStart, ct);
+        if (recentFrost)
+        {
+            return Ok(new PlotStatusDto(plotId, "FrostRisk", "Alerta de Geada: temperatura mínima abaixo de 2°C nas últimas 24h."));
+        }
+        var recentFlood = await _db.Alerts
+            .AnyAsync(a => a.PlotId == plotId && a.Type == "Flood" && a.CreatedAt >= windowStart, ct);
+        if (recentFlood)
+        {
+            return Ok(new PlotStatusDto(plotId, "FloodRisk", "Risco de Alagamento: umidade do solo acima de 90% nas últimas 24h."));
+        }
         return Ok(new PlotStatusDto(plotId, "Normal", "Sem alertas."));
     }
 }

@@ -1,0 +1,68 @@
+info:
+  name: Um lote com umidade, temperatura e precipitação
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: http://localhost:5003/api/Ingestion/sensors
+  body:
+    type: json
+    data: |-
+      {
+        "plotId": "af11a89c-6a16-49b9-8df1-c1e5d686500d",
+        "readings": [
+          {
+            "type": "moisture",
+            "value": 42.5,
+            "timestamp": "2025-02-20T06:00:00Z"
+          },
+          {
+            "type": "temperature",
+            "value": 22.0,
+            "timestamp": "2025-02-20T06:00:00Z"
+          },
+          {
+            "type": "precipitation",
+            "value": 0,
+            "timestamp": "2025-02-20T06:00:00Z"
+          },
+          {
+            "type": "moisture",
+            "value": 38.0,
+            "timestamp": "2025-02-20T12:00:00Z"
+          },
+          {
+            "type": "temperature",
+            "value": 28.5,
+            "timestamp": "2025-02-20T12:00:00Z"
+          },
+          {
+            "type": "precipitation",
+            "value": 0,
+            "timestamp": "2025-02-20T12:00:00Z"
+          },
+          {
+            "type": "moisture",
+            "value": 55.2,
+            "timestamp": "2025-02-20T18:00:00Z"
+          },
+          {
+            "type": "temperature",
+            "value": 24.0,
+            "timestamp": "2025-02-20T18:00:00Z"
+          },
+          {
+            "type": "precipitation",
+            "value": 5.5,
+            "timestamp": "2025-02-20T18:00:00Z"
+          }
+        ]
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

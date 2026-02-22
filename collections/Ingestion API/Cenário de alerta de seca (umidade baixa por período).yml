@@ -1,0 +1,63 @@
+info:
+  name: Cenário de alerta de seca (umidade baixa por período)
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: http://localhost:5003/api/Ingestion/sensors
+  body:
+    type: json
+    data: |-
+      {
+        "plotId": "b723770d-8c0c-41a7-ae8a-e605cf69653e",
+        "readings": [
+          {
+            "type": "moisture",
+            "value": 28.0,
+            "timestamp": "2025-02-20T00:00:00Z"
+          },
+          {
+            "type": "moisture",
+            "value": 26.0,
+            "timestamp": "2025-02-20T04:00:00Z"
+          },
+          {
+            "type": "moisture",
+            "value": 24.0,
+            "timestamp": "2025-02-20T08:00:00Z"
+          },
+          {
+            "type": "moisture",
+            "value": 22.0,
+            "timestamp": "2025-02-20T12:00:00Z"
+          },
+          {
+            "type": "moisture",
+            "value": 20.0,
+            "timestamp": "2025-02-20T16:00:00Z"
+          },
+          {
+            "type": "moisture",
+            "value": 18.0,
+            "timestamp": "2025-02-20T20:00:00Z"
+          },
+          {
+            "type": "moisture",
+            "value": 25.0,
+            "timestamp": "2025-02-21T00:00:00Z"
+          },
+          {
+            "type": "temperature",
+            "value": 30.0,
+            "timestamp": "2025-02-20T12:00:00Z"
+          }
+        ]
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

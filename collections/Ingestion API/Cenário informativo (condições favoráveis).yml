@@ -1,0 +1,53 @@
+info:
+  name: Cenário informativo (condições favoráveis)
+  type: http
+  seq: 7
+
+http:
+  method: POST
+  url: http://localhost:5003/api/Ingestion/sensors
+  body:
+    type: json
+    data: |-
+      {
+        "plotId": "b2000000-2000-2000-2000-000000000001",
+        "readings": [
+          {
+            "type": "moisture",
+            "value": 52.0,
+            "timestamp": "2025-02-20T00:00:00Z"
+          },
+          {
+            "type": "temperature",
+            "value": 23.0,
+            "timestamp": "2025-02-20T00:00:00Z"
+          },
+          {
+            "type": "moisture",
+            "value": 55.0,
+            "timestamp": "2025-02-20T08:00:00Z"
+          },
+          {
+            "type": "temperature",
+            "value": 24.5,
+            "timestamp": "2025-02-20T08:00:00Z"
+          },
+          {
+            "type": "moisture",
+            "value": 50.0,
+            "timestamp": "2025-02-20T16:00:00Z"
+          },
+          {
+            "type": "temperature",
+            "value": 22.0,
+            "timestamp": "2025-02-20T16:00:00Z"
+          }
+        ]
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

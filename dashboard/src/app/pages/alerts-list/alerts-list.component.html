@@ -47,9 +47,6 @@
               }
             </div>
             <div class="alert-card__actions">
-              <button type="button" class="alert-card__btn alert-card__btn--resolve" (click)="resolveAlert(a)">
-                <span aria-hidden="true">✓</span> Resolver
-              </button>
               @if (a.plotId) {
                 <a [routerLink]="['/plots', a.plotId]" class="alert-card__btn alert-card__btn--outline">
                   <span aria-hidden="true">🌱</span> Ver talhão
